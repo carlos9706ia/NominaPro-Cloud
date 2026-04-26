@@ -547,13 +547,13 @@ async function sendPayrollEmail(empId, silent = false) {
         fillPdfTemplate(emp, data, month);
         const element = document.getElementById('pdf-template');
         
-        // Lo mostramos normal para asegurar captura real
+        // Lo mostramos de forma INVISIBLE para el usuario
         element.style.display = 'block';
-        element.style.opacity = '1';
-        element.style.left = '0';
+        element.style.opacity = '0.01';
+        element.style.zIndex = '-1000';
         
         // Espera mínima para renderizado real
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 600));
 
         const opt = {
             margin: 0,
@@ -563,9 +563,11 @@ async function sendPayrollEmail(empId, silent = false) {
         };
 
         const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
+        
+        // Restaurar estilos
         element.style.display = 'none';
-        element.style.left = '0'; // Reset para previsualización normal
-        element.style.position = 'fixed';
+        element.style.opacity = '1';
+        element.style.zIndex = '5000';
 
         // 2. Firmar el PDF (Con protección)
         let finalPdfBlob = pdfBlob;
@@ -626,10 +628,10 @@ async function signPDF(pdfBlob) {
         const qrBase64 = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
         const qrImage = await pdfDoc.embedPng(qrBase64);
 
-        // 2. Estampar cuadro visual de firma electrónica (Diseño Premium)
+        // 2. Estampar cuadro visual de firma electrónica (Diseño Premium Ampliado)
         const x = 30;
-        const y = 45;
-        const w = 110;
+        const y = 40;
+        const w = 150; // Más ancho para evitar solapamientos
         const h = 32;
 
         // Fondo y Borde Azul
@@ -661,7 +663,7 @@ async function signPDF(pdfBlob) {
             x: x + 24, y: y + 12, size: 6.5, color: rgb(0.2, 0.2, 0.2), lineHeight: 8
         });
 
-        // Incrustar QR a la derecha
+        // Incrustar QR a la derecha (Más alejado del texto)
         firstPage.drawImage(qrImage, {
             x: x + w - 28, y: y + 3, width: 26, height: 26
         });
@@ -715,8 +717,10 @@ async function sendPayroll(empId) {
     const modal = document.getElementById('pdf-template');
     const element = document.getElementById('pdf-content-to-capture');
     
+    // Lo mostramos de forma INVISIBLE para el usuario
     modal.style.display = 'block';
-    modal.style.opacity = '1';
+    modal.style.opacity = '0.01';
+    modal.style.zIndex = '-1000';
 
     await new Promise(r => setTimeout(r, 600));
 
@@ -748,6 +752,8 @@ async function sendPayroll(empId) {
         alert("Error al generar el PDF.");
     } finally {
         modal.style.display = 'none';
+        modal.style.opacity = '1';
+        modal.style.zIndex = '5000';
     }
 }
 
