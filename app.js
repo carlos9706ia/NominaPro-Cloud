@@ -639,33 +639,40 @@ async function signPDF(pdfBlob) {
         const qrBase64 = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
         const qrImage = await pdfDoc.embedPng(qrBase64);
 
-        // 2. Estampar cuadro visual (POSICIÓN DERECHA Y ANCHO EXTENDIDO)
+        // 2. Estampar cuadro visual (DISEÑO UNIFICADO)
         const boxW = 220; 
-        const boxH = 40;
-        const x = width - boxW - 40; // Alineado a la derecha con margen de 40
-        const y = 60; // Altura segura
+        const boxH = 42;
+        const x = width - boxW - 40; 
+        const y = 60; 
+        const blueCol = rgb(0.05, 0.25, 0.5);
 
-        // Fondo Blanco con borde azul profesional
+        // A. Fondo total blanco
         firstPage.drawRectangle({
             x, y, width: boxW, height: boxH,
-            borderColor: rgb(0.05, 0.25, 0.5),
-            borderWidth: 1.5,
             color: rgb(1, 1, 1),
         });
 
-        // Franja lateral "FIRMADO"
+        // B. Franja azul lateral (Sólida)
         firstPage.drawRectangle({
             x: x, y: y, width: 22, height: boxH,
-            color: rgb(0.05, 0.25, 0.5),
-        });
-        
-        firstPage.drawText("FIRMADO", {
-            x: x + 7, y: y + 10, size: 8, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
+            color: blueCol,
         });
 
-        // Textos descriptivos (Con espacio de sobra)
+        // C. Marco exterior (Una sola línea para todos los bordes)
+        firstPage.drawRectangle({
+            x, y, width: boxW, height: boxH,
+            borderColor: blueCol,
+            borderWidth: 1.5,
+        });
+        
+        // D. Texto Vertical "FIRMADO" (Centrado)
+        firstPage.drawText("FIRMADO", {
+            x: x + 8, y: y + 8, size: 7, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
+        });
+
+        // E. Textos de la Firma
         firstPage.drawText("FIRMADO ELECTRÓNICAMENTE", {
-            x: x + 30, y: y + 26, size: 8.5, color: rgb(0.05, 0.25, 0.5), font: fontBold
+            x: x + 30, y: y + 28, size: 8.5, color: blueCol, font: fontBold
         });
 
         const infoText = `Firmante: ${employer.name}\nFecha: ${new Date().toLocaleString()}\nEntidad: NominaPro Cloud`;
@@ -673,12 +680,11 @@ async function signPDF(pdfBlob) {
             x: x + 30, y: y + 10, size: 7, color: rgb(0.2, 0.2, 0.2), lineHeight: 9
         });
 
-        // QR a la derecha (Separación absoluta)
+        // F. QR (Alineado a la derecha)
         firstPage.drawImage(qrImage, {
-            x: x + boxW - 35, y: y + 5, width: 30, height: 30
+            x: x + boxW - 35, y: y + 6, width: 30, height: 30
         });
 
-        // Guardar con compresión
         const signedPdfBytes = await pdfDoc.save({ useObjectStreams: false });
         return new Blob([signedPdfBytes], { type: 'application/pdf' });
     } catch (err) {
