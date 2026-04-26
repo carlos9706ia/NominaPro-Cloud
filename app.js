@@ -621,57 +621,58 @@ async function signPDF(pdfBlob) {
         const pdfDoc = await PDFDocument.load(pdfBytes);
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
+        const { width, height } = firstPage.getSize();
         const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-        // 1. Generar Código QR (Datos de validación)
+        // 1. Generar Código QR
         const qrData = `FIRMADO POR: ${employer.name}\nEMPRESA: ${employer.company}\nRUC: ${employer.ruc}\nFECHA: ${new Date().toISOString()}`;
         const qrBase64 = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
         const qrImage = await pdfDoc.embedPng(qrBase64);
 
-        // 2. Estampar cuadro visual de firma electrónica (Diseño Premium Ampliado)
-        const x = 30;
-        const y = 40;
-        const w = 150; // Más ancho para evitar solapamientos
-        const h = 32;
+        // 2. Estampar cuadro visual (Coordenadas dinámicas)
+        const boxW = 165;
+        const boxH = 38;
+        const x = 35; // Margen izquierdo
+        const y = 45; // Margen inferior
 
-        // Fondo y Borde Azul
+        // Fondo Blanco con borde azul fuerte
         firstPage.drawRectangle({
-            x, y, width: w, height: h,
-            borderColor: rgb(0.1, 0.3, 0.6),
+            x, y, width: boxW, height: boxH,
+            borderColor: rgb(0.05, 0.25, 0.5),
             borderWidth: 1.5,
             color: rgb(1, 1, 1),
         });
 
-        // Etiqueta lateral "FIRMADO"
+        // Franja lateral "FIRMADO"
         firstPage.drawRectangle({
-            x: x, y: y, width: 18, height: h,
-            color: rgb(0.1, 0.3, 0.6),
+            x: x, y: y, width: 20, height: boxH,
+            color: rgb(0.05, 0.25, 0.5),
         });
         
         firstPage.drawText("FIRMADO", {
-            x: x + 5, y: y + 8, size: 7, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
+            x: x + 6, y: y + 10, size: 8, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
         });
 
-        // Título de la firma
+        // Textos descriptivos
         firstPage.drawText("FIRMADO ELECTRÓNICAMENTE", {
-            x: x + 24, y: y + 22, size: 8, color: rgb(0.1, 0.3, 0.6), font: fontBold
+            x: x + 28, y: y + 26, size: 8.5, color: rgb(0.05, 0.25, 0.5), font: fontBold
         });
 
-        // Datos del firmante
-        const infoText = `Firmante: ${employer.name}\nFecha: ${new Date().toLocaleString()}\nValidar en: roles.nominapro.cloud`;
+        const infoText = `Firmante: ${employer.name}\nFecha: ${new Date().toLocaleString()}\nEntidad: NominaPro Cloud`;
         firstPage.drawText(infoText, {
-            x: x + 24, y: y + 12, size: 6.5, color: rgb(0.2, 0.2, 0.2), lineHeight: 8
+            x: x + 28, y: y + 10, size: 7, color: rgb(0.2, 0.2, 0.2), lineHeight: 9
         });
 
-        // Incrustar QR a la derecha (Más alejado del texto)
+        // QR a la derecha (Separación total garantizada)
         firstPage.drawImage(qrImage, {
-            x: x + w - 28, y: y + 3, width: 26, height: 26
+            x: x + boxW - 32, y: y + 4, width: 28, height: 28
         });
 
-        const signedPdfBytes = await pdfDoc.save();
+        // Guardar con compresión
+        const signedPdfBytes = await pdfDoc.save({ useObjectStreams: false });
         return new Blob([signedPdfBytes], { type: 'application/pdf' });
     } catch (err) {
-        console.error("Error firma digital premium:", err);
+        console.error("Error firma digital avanzada:", err);
         throw err;
     }
 }
@@ -729,7 +730,8 @@ async function sendPayroll(empId) {
         filename: `Rol_${empId}_${month}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+        pagebreak: { mode: 'avoid-all' } // Forzar evitar saltos de página
     };
 
     try {
