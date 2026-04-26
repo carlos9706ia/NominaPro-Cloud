@@ -592,6 +592,7 @@ tr:last-child td {
 .pdf-company-info { flex: 2; }
 .pdf-title-block { flex: 1; text-align: right; }
 .pdf-company-info h1 { font-size: 16pt; margin: 0; line-height: 1.2; }
+.pdf-company-info p { margin: 2px 0; white-space: nowrap; font-size: 10pt; }
 .pdf-title-block h2 { font-size: 14pt; margin: 0; white-space: nowrap; }
 
 .pdf-table {
