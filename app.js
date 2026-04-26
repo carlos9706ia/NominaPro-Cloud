@@ -52,19 +52,31 @@ const FLOW_SAVE_EMPLOYEE_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0
 const FLOW_SEND_PAYROLL_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0ef16f7a85f54fcfaab7d494c333e1a9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=1ptS3PLYkNAlxx-jXZYQtWnQoe_J6Pvu-deV4-DI3T0";
 
 // --- Session & State ---
+const persistentEmployer = JSON.parse(localStorage.getItem('persistentEmployer')) || null;
 let currentSession = JSON.parse(localStorage.getItem('currentSession')) || null;
+
+// Si hay sesión pero no empleador, intentamos recuperar de persistencia
+if (currentSession && persistentEmployer) {
+    currentSession = { ...currentSession, ...persistentEmployer };
+}
+
 let employees = [];
 let payrollHistory = {};
-let employer = { name: '', company: '', ruc: '' };
+let employer = persistentEmployer || { name: '', company: '', ruc: '' };
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     initDate();
     initEventListeners();
+    updateSignatureStatus(); // Verificar firma al cargar
 
     if (currentSession) {
         showApp();
+        // Llenar campos de configuración con lo que tenemos
+        if (employer.company) document.getElementById('company-name').value = employer.company;
+        if (employer.ruc) document.getElementById('company-ruc').value = employer.ruc;
+        if (employer.name) document.getElementById('company-owner').value = employer.name;
     } else {
         showLogin();
     }
@@ -145,14 +157,22 @@ async function handleLogin(e) {
             try {
                 const data = JSON.parse(text);
                 if (data && (data.Title || data.RUC)) {
-                    currentSession = {
-                        ruc: ruc,
-                        employer: {
-                            name: data.NombreCEO || data.ceo || 'CEO',
-                            company: data.NombreEmpresa || data.name || 'Empresa',
-                            ruc: data.Title || data.ruc
-                        }
+                    const empData = {
+                        name: data.NombreCEO || data.ceo || 'CEO',
+                        company: data.NombreEmpresa || data.name || 'Empresa',
+                        ruc: data.Title || data.ruc
                     };
+                    
+                    currentSession = { ruc: ruc, employer: empData };
+                    
+                    // Recuperar p12 de persistencia si coincide el RUC
+                    if (persistentEmployer && persistentEmployer.ruc === ruc) {
+                        currentSession = { ...currentSession, ...persistentEmployer };
+                        employer = { ...empData, ...persistentEmployer };
+                    } else {
+                        employer = empData;
+                    }
+
                     localStorage.setItem('currentSession', JSON.stringify(currentSession));
                     showApp();
                 } else {
@@ -228,9 +248,10 @@ async function handleEmployerUpdate(e) {
         p12Pass: document.getElementById('p12-password').value || currentSession.p12Pass
     };
 
-    // Actualizar sesión local
+    // Actualizar sesión local y persistencia
     currentSession = { ...currentSession, ...updatedData };
     localStorage.setItem('currentSession', JSON.stringify(currentSession));
+    localStorage.setItem('persistentEmployer', JSON.stringify(updatedData)); // Guardado permanente
     employer = updatedData;
     
     alert("Configuración actualizada con éxito.");
@@ -243,7 +264,7 @@ function updateSignatureStatus() {
     const fileLabel = document.querySelector('label[for="p12-file"]') || { innerText: '' };
     const statusEl = document.getElementById('p12-status');
     
-    if (currentSession.p12) {
+    if (currentSession && currentSession.p12) {
         if (!statusEl) {
             const span = document.createElement('span');
             span.id = 'p12-status';
@@ -352,11 +373,10 @@ function switchSection(sectionId, navItem) {
 }
 
 function logout(e) {
-    e.preventDefault();
-    if (confirm('¿Cerrar sesión?')) {
-        localStorage.removeItem('currentSession');
-        location.reload();
-    }
+    if(e) e.preventDefault();
+    localStorage.removeItem('currentSession');
+    // Mantenemos 'persistentEmployer' intacto
+    location.reload();
 }
 
 function renderEmployees() {
@@ -595,36 +615,61 @@ async function signPDF(pdfBlob) {
 
     try {
         const pdfBytes = await pdfBlob.arrayBuffer();
-        // Usar la librería global PDFLib de forma segura
-        const { PDFDocument, rgb } = PDFLib;
+        const { PDFDocument, rgb, StandardFonts } = PDFLib;
         const pdfDoc = await PDFDocument.load(pdfBytes);
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
+        const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-        // Estampar cuadro visual de firma electrónica
+        // 1. Generar Código QR (Datos de validación)
+        const qrData = `FIRMADO POR: ${employer.name}\nEMPRESA: ${employer.company}\nRUC: ${employer.ruc}\nFECHA: ${new Date().toISOString()}`;
+        const qrBase64 = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
+        const qrImage = await pdfDoc.embedPng(qrBase64);
+
+        // 2. Estampar cuadro visual de firma electrónica (Diseño Premium)
+        const x = 30;
+        const y = 45;
+        const w = 110;
+        const h = 32;
+
+        // Fondo y Borde Azul
         firstPage.drawRectangle({
-            x: 45,
-            y: 85,
-            width: 85,
-            height: 35,
-            borderColor: rgb(0, 0.4, 0.8),
-            borderWidth: 1,
-            color: rgb(0.95, 0.98, 1),
+            x, y, width: w, height: h,
+            borderColor: rgb(0.1, 0.3, 0.6),
+            borderWidth: 1.5,
+            color: rgb(1, 1, 1),
         });
 
-        const text = `Firmado electrónicamente por:\n${employer.name || 'Representante'}\nFecha: ${new Date().toLocaleString()}`;
-        firstPage.drawText(text, {
-            x: 50,
-            y: 110,
-            size: 7,
-            color: rgb(0, 0.1, 0.4),
-            lineHeight: 9
+        // Etiqueta lateral "FIRMADO"
+        firstPage.drawRectangle({
+            x: x, y: y, width: 18, height: h,
+            color: rgb(0.1, 0.3, 0.6),
+        });
+        
+        firstPage.drawText("FIRMADO", {
+            x: x + 5, y: y + 8, size: 7, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
+        });
+
+        // Título de la firma
+        firstPage.drawText("FIRMADO ELECTRÓNICAMENTE", {
+            x: x + 24, y: y + 22, size: 8, color: rgb(0.1, 0.3, 0.6), font: fontBold
+        });
+
+        // Datos del firmante
+        const infoText = `Firmante: ${employer.name}\nFecha: ${new Date().toLocaleString()}\nValidar en: roles.nominapro.cloud`;
+        firstPage.drawText(infoText, {
+            x: x + 24, y: y + 12, size: 6.5, color: rgb(0.2, 0.2, 0.2), lineHeight: 8
+        });
+
+        // Incrustar QR a la derecha
+        firstPage.drawImage(qrImage, {
+            x: x + w - 28, y: y + 3, width: 26, height: 26
         });
 
         const signedPdfBytes = await pdfDoc.save();
         return new Blob([signedPdfBytes], { type: 'application/pdf' });
     } catch (err) {
-        console.error("Error firma digital:", err);
+        console.error("Error firma digital premium:", err);
         throw err;
     }
 }
