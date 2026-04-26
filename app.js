@@ -83,8 +83,8 @@ function initEventListeners() {
     const payrollForm = document.getElementById('payroll-form');
     if(payrollForm) payrollForm.onsubmit = handlePayrollSubmit;
 
-    const bulkBtn = document.getElementById('bulk-generate-btn');
-    if(bulkBtn) bulkBtn.onclick = handleBulkPreview;
+    const bulkBtn = document.getElementById('bulk-send-btn');
+    if(bulkBtn) bulkBtn.onclick = handleBulkSend;
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
@@ -341,10 +341,9 @@ function renderGeneratorList() {
             </td>
             <td>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="action-btn" title="Previsualizar" onclick="previewPayroll('${id}')"><i data-lucide="eye"></i></button>
-                    <button class="action-btn send" title="Descargar PDF" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--primary);">
-                        <i data-lucide="download"></i>
-                    </button>
+                    <button class="action-btn" title="Previsualizar" onclick="previewPayroll('${id}')" style="color: var(--secondary);"><i data-lucide="eye"></i></button>
+                    <button class="action-btn" title="Descargar PDF" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--primary);"><i data-lucide="download"></i></button>
+                    <button class="action-btn" title="Enviar por Correo" onclick="sendPayrollEmail('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--success);"><i data-lucide="mail"></i></button>
                 </div>
             </td>
         `;
@@ -398,13 +397,59 @@ function handlePayrollSubmit(e) {
     renderGeneratorList();
 }
 
-function handleBulkPreview() {
+async function handleBulkSend() {
     const selected = document.querySelectorAll('.emp-select:checked');
     if (selected.length === 0) {
         alert("Por favor, selecciona al menos un empleado.");
         return;
     }
-    alert(`Has seleccionado ${selected.length} empleados. Puedes descargarlos uno a uno con el icono de descarga o enviarlos masivamente (botón en desarrollo).`);
+
+    if (confirm(`¿Estás seguro de enviar ${selected.length} roles de pago por correo?`)) {
+        for (const cb of selected) {
+            const empId = cb.getAttribute('data-id');
+            await sendPayrollEmail(empId, true); // true para modo silencioso
+        }
+        alert("✅ Todos los correos han sido procesados.");
+    }
+}
+
+async function sendPayrollEmail(empId, silent = false) {
+    const emp = employees.find(e => (e.Title || e.id) === empId);
+    const month = document.getElementById('payroll-month').value;
+    const data = payrollHistory[`${empId}_${month}`];
+
+    if (!data || data.net === 0) {
+        if(!silent) alert("Primero configura el sueldo del empleado.");
+        return;
+    }
+
+    try {
+        const response = await fetch(FLOW_SEND_PAYROLL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empId: empId,
+                email: emp.Email || emp.email,
+                names: emp.NombreCompleto || emp.names,
+                month: month,
+                salary: data.salary,
+                extraIncome: data.extraIncome || 0,
+                extraDeductions: data.extraDeductions || 0,
+                iess: data.iess,
+                net: data.net,
+                ruc: currentSession.ruc
+            })
+        });
+
+        if (response.ok) {
+            if(!silent) alert(`✅ Correo enviado con éxito a ${emp.Email || emp.email}`);
+        } else {
+            if(!silent) alert("Error al enviar el correo. Revisa el flujo en Microsoft.");
+        }
+    } catch (err) {
+        console.error("Error envío:", err);
+        if(!silent) alert("Error de conexión al enviar el correo.");
+    }
 }
 
 window.toggleSelectAll = (source) => {
