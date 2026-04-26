@@ -674,7 +674,7 @@ function fillPdfTemplate(emp, data, month) {
     document.getElementById('pdf-owner').textContent = employer.name;
     document.getElementById('pdf-period').textContent = `MES DE ${month}`;
     document.getElementById('pdf-date-range').textContent = dateRange;
-    document.getElementById('pdf-days').textContent = lastDay > 30 ? "30" : lastDay; // Ajuste estándar a 30 días
+    document.getElementById('pdf-days').textContent = lastDay; 
     document.getElementById('pdf-generation-time').textContent = timestamp;
     
     document.getElementById('pdf-emp-name').textContent = emp.NombreCompleto || emp.names;
