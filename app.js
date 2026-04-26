@@ -550,18 +550,19 @@ async function sendPayrollEmail(empId, silent = false) {
 
     try {
         // 1. Generar PDF NATIVO (Texto Real + Vectores)
-        const doc = new jspdf.jsPDF();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         
         // --- Encabezado ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text(employer.name || "EMPRESA", 15, 20);
+        doc.text(currentSession.name || "EMPRESA", 15, 20);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.text(`RUC: ${employer.ruc || ""}`, 15, 26);
-        doc.text(`REPRESENTANTE: ${employer.company || ""}`, 15, 31);
+        doc.text(`RUC: ${currentSession.ruc || ""}`, 15, 26);
+        doc.text(`REPRESENTANTE: ${currentSession.company || ""}`, 15, 31);
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
@@ -792,17 +793,18 @@ async function sendPayroll(empId) {
 
     try {
         // Generar PDF NATIVO (Texto Real + Vectores)
-        const doc = new jspdf.jsPDF();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text(employer.name || "EMPRESA", 15, 20);
+        doc.text(currentSession.name || "EMPRESA", 15, 20);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.text(`RUC: ${employer.ruc || ""}`, 15, 26);
-        doc.text(`REPRESENTANTE: ${employer.company || ""}`, 15, 31);
+        doc.text(`RUC: ${currentSession.ruc || ""}`, 15, 26);
+        doc.text(`REPRESENTANTE: ${currentSession.company || ""}`, 15, 31);
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
