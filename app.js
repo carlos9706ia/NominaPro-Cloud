@@ -139,7 +139,7 @@ async function handleRegister(e) {
             alert("¡EMPRESA REGISTRADA! Ya puedes cerrar esta ventana e iniciar sesión.");
             window.closeAllModals();
         } else {
-            alert("Microsoft recibió el dato pero hubo un error en el flujo.");
+            alert("Error de Microsoft: " + response.status + ". Revisa si el flujo tiene el paso de 'Respuesta'.");
         }
     } catch (err) {
         alert("Error crítico: " + err.message);
