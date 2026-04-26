@@ -10,7 +10,7 @@ window.closeAllModals = () => {
 };
 
 // --- Configuration ---
-const FLOW_REGISTER_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1e58f2780ef449dfbd9e99214777d549/triggers/manual/paths/invoke?api-version=1";
+const FLOW_REGISTER_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9ccaf784e77a414ab9b032ae8ad7d450/triggers/manual/paths/invoke?api-version=1";
 const FLOW_LOGIN_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3c6016458c2843afb5091b6e1b0db33e/triggers/manual/paths/invoke?api-version=1";
 const FLOW_FETCH_DATA_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c1f37f25565f4d24bca4da0a75c8ce67/triggers/manual/paths/invoke?api-version=1";
 const FLOW_SAVE_EMPLOYEE_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/92f4023f477248a38a1c48ad6e9daa93/triggers/manual/paths/invoke?api-version=1";
