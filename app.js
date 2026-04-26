@@ -329,18 +329,30 @@ async function loadDataFromMicrosoft() {
         const data = await response.json();
         employees = data.empleados || [];
 
-        payrollHistory = {};
+        // --- SOLUCIÓN DEFINITIVA: NO BORRAR EL HISTORIAL LOCAL ---
+        // Cargamos lo que ya tenemos en localStorage para no perder nada
+        const localHistory = JSON.parse(localStorage.getItem('payrollHistory')) || {};
+        
+        // Fusionamos con los roles que vienen de Microsoft (si vienen)
         if (data.roles) {
             data.roles.forEach(role => {
                 const key = `${role.EmpleadoCedula}_${role.Mes}`;
-                payrollHistory[key] = {
-                    salary: role.Sueldo,
-                    iess: role.IESS,
-                    net: role.Neto,
-                    deductions: []
-                };
+                // Solo cargamos de Microsoft si NO tenemos un dato local más reciente
+                if (!localHistory[key]) {
+                    localHistory[key] = {
+                        baseSalary: role.Sueldo,
+                        iess: role.IESS,
+                        net: role.Neto,
+                        extrasIn: [],
+                        extrasOut: []
+                    };
+                }
             });
         }
+        
+        // Actualizamos el estado global con la fusión
+        payrollHistory = localHistory;
+        localStorage.setItem('payrollHistory', JSON.stringify(payrollHistory));
 
         renderEmployees();
         renderDashboard();
