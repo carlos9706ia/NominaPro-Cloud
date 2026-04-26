@@ -184,7 +184,7 @@ async function handleSaveEmployee(e) {
         paymentMethod: document.getElementById('emp-payment').value,
         bank: document.getElementById('emp-bank').value,
         accountType: document.getElementById('emp-account-type').value,
-        accountNumber: document.getElementById('emp-account-number').value,
+        account: document.getElementById('emp-account-number').value,
         ruc: currentSession.ruc
     };
 
