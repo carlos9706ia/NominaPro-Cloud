@@ -298,17 +298,18 @@ function logout(e) {
 
 function renderEmployees() {
     const list = document.getElementById('employees-table-body');
-    if (!list) return;
+    if(!list) return;
     list.innerHTML = '';
     employees.forEach((emp) => {
         const tr = document.createElement('tr');
+        const id = emp.Title || emp.id;
         tr.innerHTML = `
             <td>${emp.NombreCompleto || emp.names || 'N/A'}</td>
-            <td>${emp.Title || emp.id}</td>
+            <td>${id}</td>
             <td>${emp.Email || emp.email || '-'}</td>
             <td>${emp.FormaPago || emp.paymentMethod || '-'}</td>
             <td>
-                <button class="action-btn edit" onclick="alert('Función en desarrollo')"><i data-lucide="edit"></i></button>
+                <button class="action-btn edit" onclick="editEmployee('${id}')"><i data-lucide="edit"></i></button>
             </td>
         `;
         list.appendChild(tr);
