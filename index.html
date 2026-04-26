@@ -197,7 +197,7 @@
                         <table id="generator-table">
                             <thead>
                                 <tr>
-                                    <th>Sel.</th>
+                                    <th><input type="checkbox" id="select-all-emps" onchange="toggleSelectAll(this)"></th>
                                     <th>Empleado</th>
                                     <th>Sueldo Base</th>
                                     <th>IESS (9.45%)</th>
@@ -322,14 +322,14 @@
     <div id="pdf-template" style="display: none;">
         <div class="pdf-container">
             <div class="pdf-header">
-                <div class="company-info">
+                <div class="company-info pdf-company-info">
                     <h1 id="pdf-company-name">NOMBRE EMPRESA</h1>
                     <p>RUC: <span id="pdf-ruc">0000000000001</span></p>
                     <p>REPRESENTANTE: <span id="pdf-owner">NOMBRE REPRESENTANTE</span></p>
                 </div>
-                <div class="pdf-title">
+                <div class="pdf-title-block">
                     <h2>ROL DE PAGO INDIVIDUAL</h2>
-                    <p id="pdf-period">MES DE ENERO 2024</p>
+                    <p id="pdf-period" style="margin: 0; font-weight: bold;">MES DE ENERO 2024</p>
                 </div>
             </div>
 

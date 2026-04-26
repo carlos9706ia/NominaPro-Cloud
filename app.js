@@ -340,9 +340,12 @@ function renderGeneratorList() {
                 <button class="action-btn config" title="Configurar Sueldo" onclick="openPayrollConfig('${id}')"><i data-lucide="settings"></i></button>
             </td>
             <td>
-                <button class="action-btn send" title="Generar y Enviar PDF" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--primary);">
-                    <i data-lucide="send"></i>
-                </button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="action-btn" title="Previsualizar" onclick="previewPayroll('${id}')"><i data-lucide="eye"></i></button>
+                    <button class="action-btn send" title="Descargar PDF" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--primary);">
+                        <i data-lucide="download"></i>
+                    </button>
+                </div>
             </td>
         `;
         list.appendChild(tr);
@@ -396,9 +399,39 @@ function handlePayrollSubmit(e) {
 }
 
 function handleBulkPreview() {
-    alert("Generando previsualización de todos los empleados seleccionados...");
-    renderGeneratorList();
+    const selected = document.querySelectorAll('.emp-select:checked');
+    if (selected.length === 0) {
+        alert("Por favor, selecciona al menos un empleado.");
+        return;
+    }
+    alert(`Has seleccionado ${selected.length} empleados. Puedes descargarlos uno a uno con el icono de descarga o enviarlos masivamente (botón en desarrollo).`);
 }
+
+window.toggleSelectAll = (source) => {
+    document.querySelectorAll('.emp-select').forEach(cb => cb.checked = source.checked);
+};
+
+window.previewPayroll = (empId) => {
+    const emp = employees.find(e => (e.Title || e.id) === empId);
+    const month = document.getElementById('payroll-month').value;
+    const data = payrollHistory[`${empId}_${month}`];
+
+    if (!data || data.net === 0) {
+        alert("Primero configura el sueldo del empleado.");
+        return;
+    }
+
+    fillPdfTemplate(emp, data, month);
+    const template = document.getElementById('pdf-template');
+    template.style.display = 'block';
+    
+    // Auto-ocultar después de 5 segundos o al hacer clic
+    setTimeout(() => {
+        if(confirm("¿Deseas cerrar la previsualización?")) {
+            template.style.display = 'none';
+        }
+    }, 5000);
+};
 
 async function initDate() {
     const now = new Date();
