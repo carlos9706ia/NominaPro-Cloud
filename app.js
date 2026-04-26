@@ -589,9 +589,9 @@ async function sendPayrollEmail(empId, silent = false) {
             startY: 72,
             head: [['DESCRIPCIÓN DE INGRESOS', 'VALOR']],
             body: [
-                ['Sueldo Unificado', data.baseSalary.toFixed(2)],
-                ...(data.extrasIn || []).map(x => [x.desc, x.val.toFixed(2)]),
-                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: data.totalIn.toFixed(2), styles: { fontStyle: 'bold' } }]
+                ['Sueldo Unificado', (data.baseSalary || 0).toFixed(2)],
+                ...(data.extrasIn || []).map(x => [x.desc || "Extra", (x.val || 0).toFixed(2)]),
+                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: (data.totalIn || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
@@ -603,9 +603,9 @@ async function sendPayrollEmail(empId, silent = false) {
             startY: doc.lastAutoTable.finalY + 10,
             head: [['DESCRIPCIÓN DE DESCUENTOS', 'VALOR']],
             body: [
-                ['Aporte Personal IESS (9.45%)', (data.baseSalary * 0.0945).toFixed(2)],
-                ...(data.extrasOut || []).map(x => [x.desc, x.val.toFixed(2)]),
-                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: data.totalOut.toFixed(2), styles: { fontStyle: 'bold' } }]
+                ['Aporte Personal IESS (9.45%)', ((data.baseSalary || 0) * 0.0945).toFixed(2)],
+                ...(data.extrasOut || []).map(x => [x.desc || "Descuento", (x.val || 0).toFixed(2)]),
+                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: (data.totalOut || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
@@ -618,7 +618,7 @@ async function sendPayrollEmail(empId, silent = false) {
         doc.text("NETO A RECIBIR", 15, finalY);
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text(`$${data.net.toFixed(2)}`, 15, finalY + 8);
+        doc.text(`$${(data.net || 0).toFixed(2)}`, 15, finalY + 8);
         
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
@@ -793,6 +793,11 @@ async function sendPayroll(empId) {
     const month = document.getElementById('payroll-month').value;
     const data = payrollHistory[`${empId}_${month}`];
 
+    if (!data || typeof data.baseSalary === 'undefined') {
+        alert("❌ Primero configura el sueldo del empleado para este mes.");
+        return;
+    }
+
     try {
         // 1. Detección robusta de la librería jsPDF
         const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
@@ -834,9 +839,9 @@ async function sendPayroll(empId) {
             startY: 72,
             head: [['DESCRIPCIÓN DE INGRESOS', 'VALOR']],
             body: [
-                ['Sueldo Unificado', data.baseSalary.toFixed(2)],
-                ...(data.extrasIn || []).map(x => [x.desc, x.val.toFixed(2)]),
-                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: data.totalIn.toFixed(2), styles: { fontStyle: 'bold' } }]
+                ['Sueldo Unificado', (data.baseSalary || 0).toFixed(2)],
+                ...(data.extrasIn || []).map(x => [x.desc || "Extra", (x.val || 0).toFixed(2)]),
+                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: (data.totalIn || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
@@ -847,9 +852,9 @@ async function sendPayroll(empId) {
             startY: doc.lastAutoTable.finalY + 10,
             head: [['DESCRIPCIÓN DE DESCUENTOS', 'VALOR']],
             body: [
-                ['Aporte Personal IESS (9.45%)', (data.baseSalary * 0.0945).toFixed(2)],
-                ...(data.extrasOut || []).map(x => [x.desc, x.val.toFixed(2)]),
-                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: data.totalOut.toFixed(2), styles: { fontStyle: 'bold' } }]
+                ['Aporte Personal IESS (9.45%)', ((data.baseSalary || 0) * 0.0945).toFixed(2)],
+                ...(data.extrasOut || []).map(x => [x.desc || "Descuento", (x.val || 0).toFixed(2)]),
+                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: (data.totalOut || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
@@ -861,7 +866,7 @@ async function sendPayroll(empId) {
         doc.text("NETO A RECIBIR", 15, finalY);
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text(`$${data.net.toFixed(2)}`, 15, finalY + 8);
+        doc.text(`$${(data.net || 0).toFixed(2)}`, 15, finalY + 8);
         
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
