@@ -433,8 +433,8 @@ function renderGeneratorList() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><input type="checkbox" class="emp-select" data-id="${id}"></td>
-            <td>${emp.NombreCompleto || emp.names}</td>
-            <td>$${(config.baseSalary || 0).toFixed(2)}</td>
+            <td>${emp.NombreCompleto || emp.names || emp.Title}</td>
+            <td>$${(config.baseSalary || config.salary || 0).toFixed(2)}</td>
             <td>$${(config.iess || 0).toFixed(2)}</td>
             <td><strong>$${(config.net || 0).toFixed(2)}</strong></td>
             <td>
