@@ -670,14 +670,14 @@ async function signPDF(pdfBlob) {
             x: x + 8, y: y + 8, size: 7, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
         });
 
-        // E. Textos de la Firma
+        // E. Textos de la Firma (Subidos un poquito para centrado perfecto)
         firstPage.drawText("FIRMADO ELECTRÓNICAMENTE", {
-            x: x + 30, y: y + 28, size: 8.5, color: blueCol, font: fontBold
+            x: x + 30, y: y + 30, size: 8.5, color: blueCol, font: fontBold
         });
 
         const infoText = `Firmante: ${employer.name}\nFecha: ${new Date().toLocaleString()}\nEntidad: NominaPro Cloud`;
         firstPage.drawText(infoText, {
-            x: x + 30, y: y + 10, size: 7, color: rgb(0.2, 0.2, 0.2), lineHeight: 9
+            x: x + 30, y: y + 13, size: 7, color: rgb(0.2, 0.2, 0.2), lineHeight: 9
         });
 
         // F. QR (Alineado a la derecha)
