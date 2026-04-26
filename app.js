@@ -549,33 +549,35 @@ async function sendPayrollEmail(empId, silent = false) {
     }
 
     try {
-        // 1. Generar PDF en el navegador
+        // 1. Generar Clon del Rol para captura segura
         fillPdfTemplate(emp, data, month);
-        const element = document.getElementById('pdf-template');
+        const original = document.getElementById('pdf-template');
+        const clone = original.cloneNode(true);
         
-        // Lo movemos FUERA DE LA PANTALLA para que sea invisible al usuario pero visible para la cámara
-        element.style.display = 'block';
-        element.style.position = 'fixed';
-        element.style.left = '-9999px';
-        element.style.top = '0';
-        element.style.opacity = '1'; 
-        
-        // Espera de 1 segundo para renderizado total
-        await new Promise(r => setTimeout(r, 1000));
+        // Estilos para el clon (Invisible pero procesable)
+        clone.style.position = 'absolute';
+        clone.style.left = '-9999px';
+        clone.style.top = '0';
+        clone.style.display = 'block';
+        clone.style.width = '210mm'; // Ancho A4
+        document.body.appendChild(clone);
 
         const opt = {
             margin: 0,
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+            filename: `Rol_${empId}_${month}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                logging: false, 
+                backgroundColor: '#ffffff',
+                letterRendering: true // Mejora el renderizado de texto real
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
         };
 
-        const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
-        
-        // Restaurar estilos
-        element.style.display = 'none';
-        element.style.opacity = '1';
-        element.style.zIndex = '5000';
+        const pdfBlob = await html2pdf().from(clone).set(opt).output('blob');
+        document.body.removeChild(clone); // Limpiamos el clon
 
         // 2. Firmar el PDF (Con protección)
         let finalPdfBlob = pdfBlob;
