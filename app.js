@@ -232,7 +232,25 @@ async function handleEmployerUpdate(e) {
     
     alert("Configuración actualizada con éxito.");
     btn.innerText = "Guardar Cambios";
+    updateSignatureStatus();
     renderDashboard();
+}
+
+function updateSignatureStatus() {
+    const fileLabel = document.querySelector('label[for="p12-file"]') || { innerText: '' };
+    const statusEl = document.getElementById('p12-status');
+    
+    if (currentSession.p12) {
+        if (!statusEl) {
+            const span = document.createElement('span');
+            span.id = 'p12-status';
+            span.innerHTML = ' <strong style="color: var(--success);">✅ Certificado Cargado</strong>';
+            document.querySelector('label[for="p12-file"]')?.appendChild(span);
+        }
+        if (document.getElementById('p12-password')) {
+            document.getElementById('p12-password').placeholder = "•••••••• (Contraseña guardada)";
+        }
+    }
 }
 
 async function handleSaveEmployee(e) {
@@ -303,6 +321,14 @@ async function loadDataFromMicrosoft() {
         renderEmployees();
         renderDashboard();
         renderGeneratorList();
+        
+        // Cargar datos en la sección de configuración
+        if (employer) {
+            if(document.getElementById('company-name')) document.getElementById('company-name').value = employer.company || '';
+            if(document.getElementById('company-ruc')) document.getElementById('company-ruc').value = employer.ruc || '';
+            if(document.getElementById('company-owner')) document.getElementById('company-owner').value = employer.name || '';
+            updateSignatureStatus();
+        }
     } catch (err) {
         console.error("Error cargando datos:", err);
     }
