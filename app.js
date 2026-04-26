@@ -592,8 +592,8 @@ async function sendPayrollEmail(empId, silent = false) {
         doc.setFontSize(11);
         doc.text("DATOS DEL EMPLEADO", 15, 45);
         doc.setFontSize(9);
-        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names}`, 15, 52);
-        doc.text(`CÉDULA: ${emp.Cedula || emp.id}`, 15, 57);
+        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names || emp.Title || ""}`, 15, 52);
+        doc.text(`CÉDULA: ${emp.Cedula || emp.id || emp.Title || ""}`, 15, 57);
         doc.text(`PERIODO: desde 01/${month} al 30/${month}`, 15, 62);
         doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
         
@@ -635,8 +635,8 @@ async function sendPayrollEmail(empId, silent = false) {
         
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
-        doc.text(`FORMA DE PAGO: ${emp.MetodoPago || "TRANSFERENCIA"}`, 15, finalY + 15);
-        doc.text(`BANCO/CUENTA: ${emp.Banco || ""} | ${emp.TipoCuenta || ""} | ${emp.NumeroCuenta || ""}`, 15, finalY + 20);
+        doc.text(`FORMA DE PAGO: ${emp.MetodoPago || emp.FormaPago || "TRANSFERENCIA"}`, 15, finalY + 15);
+        doc.text(`BANCO/CUENTA: ${emp.Banco || emp.bank || ""} | ${emp.TipoCuenta || emp.accountType || ""} | ${emp.Cuenta || emp.NumeroCuenta || emp.account || ""}`, 15, finalY + 20);
         
         // --- Firmas ---
         doc.text("Firma del Empleador", 15, finalY + 30);
@@ -842,8 +842,8 @@ async function sendPayroll(empId) {
         doc.setFontSize(11);
         doc.text("DATOS DEL EMPLEADO", 15, 45);
         doc.setFontSize(9);
-        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names}`, 15, 52);
-        doc.text(`CÉDULA: ${emp.Cedula || emp.id}`, 15, 57);
+        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names || emp.Title || ""}`, 15, 52);
+        doc.text(`CÉDULA: ${emp.Cedula || emp.id || emp.Title || ""}`, 15, 57);
         doc.text(`PERIODO: desde 01/${month} al 30/${month}`, 15, 62);
         doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
         
@@ -884,7 +884,7 @@ async function sendPayroll(empId) {
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
         doc.text(`FORMA DE PAGO: ${emp.MetodoPago || "TRANSFERENCIA"}`, 15, finalY + 15);
-        doc.text(`BANCO/CUENTA: ${emp.Banco || ""} | ${emp.TipoCuenta || ""} | ${emp.NumeroCuenta || ""}`, 15, finalY + 20);
+        doc.text(`BANCO/CUENTA: ${emp.Banco || emp.bank || ""} | ${emp.TipoCuenta || emp.accountType || ""} | ${emp.Cuenta || emp.NumeroCuenta || emp.account || ""}`, 15, finalY + 20);
         
         doc.text("Firma del Empleador", 15, finalY + 30);
         doc.text("Firma del Empleado", 15, finalY + 35);
