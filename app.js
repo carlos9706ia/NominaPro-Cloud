@@ -337,10 +337,12 @@ function renderGeneratorList() {
             <td>$${config.iess.toFixed(2)}</td>
             <td><strong>$${config.net.toFixed(2)}</strong></td>
             <td>
-                <button class="action-btn config" onclick="openPayrollConfig('${id}')"><i data-lucide="settings"></i></button>
+                <button class="action-btn config" title="Configurar Sueldo" onclick="openPayrollConfig('${id}')"><i data-lucide="settings"></i></button>
             </td>
             <td>
-                <button class="action-btn" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''}><i data-lucide="mail"></i></button>
+                <button class="action-btn send" title="Generar y Enviar PDF" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--primary);">
+                    <i data-lucide="send"></i>
+                </button>
             </td>
         `;
         list.appendChild(tr);
@@ -396,6 +398,18 @@ function handlePayrollSubmit(e) {
 function handleBulkPreview() {
     alert("Generando previsualización de todos los empleados seleccionados...");
     renderGeneratorList();
+}
+
+async function initDate() {
+    const now = new Date();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const monthStr = `${now.getFullYear()}-${month}`;
+    const input = document.getElementById('payroll-month');
+    if(input) {
+        input.value = monthStr;
+        // Forzamos un renderizado inicial si ya hay sesión
+        if(currentSession) renderGeneratorList();
+    }
 }
 
 async function sendPayroll(empId) {
