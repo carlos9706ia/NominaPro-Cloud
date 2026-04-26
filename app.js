@@ -424,13 +424,6 @@ window.previewPayroll = (empId) => {
     fillPdfTemplate(emp, data, month);
     const template = document.getElementById('pdf-template');
     template.style.display = 'block';
-    
-    // Auto-ocultar después de 5 segundos o al hacer clic
-    setTimeout(() => {
-        if(confirm("¿Deseas cerrar la previsualización?")) {
-            template.style.display = 'none';
-        }
-    }, 5000);
 };
 
 async function initDate() {
