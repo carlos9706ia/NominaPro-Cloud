@@ -240,12 +240,16 @@
                     </div>
                     <div class="form-group">
                         <label for="emp-payment">Forma de Pago</label>
-                        <select id="emp-payment" required>
+                        <select id="emp-payment" required onchange="toggleBankFields()">
                             <option value="Transferencia">Transferencia Bancaria</option>
                             <option value="Efectivo">Efectivo</option>
                             <option value="Cheque">Cheque</option>
                         </select>
                     </div>
+                </div>
+
+                <!-- Campos Bancarios Dinámicos -->
+                <div id="bank-fields" class="form-grid" style="margin-top: -1rem;">
                     <div class="form-group">
                         <label for="emp-bank">Banco</label>
                         <input type="text" id="emp-bank" placeholder="Ej: Pichincha">

@@ -7,7 +7,18 @@ window.openRegisterModal = (e) => {
 
 window.openEmployeeModal = () => {
     const modal = document.getElementById('employee-modal');
-    if(modal) modal.style.display = 'flex';
+    if(modal) {
+        modal.style.display = 'flex';
+        toggleBankFields(); // Asegurar estado inicial correcto
+    }
+};
+
+window.toggleBankFields = () => {
+    const payment = document.getElementById('emp-payment').value;
+    const bankFields = document.getElementById('bank-fields');
+    if(bankFields) {
+        bankFields.style.display = (payment === 'Transferencia') ? 'grid' : 'none';
+    }
 };
 
 window.openEmployerModal = () => {
