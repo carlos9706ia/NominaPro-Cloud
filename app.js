@@ -549,9 +549,11 @@ async function sendPayrollEmail(empId, silent = false) {
     }
 
     try {
-        // 1. Generar PDF NATIVO (Texto Real + Vectores)
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        // 1. Detección robusta de la librería jsPDF
+        const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+        if (!jsPDFLib) throw new Error("La librería de PDF no se cargó correctamente. Por favor, refresca la página.");
+        
+        const doc = new jsPDFLib();
         const pageWidth = doc.internal.pageSize.getWidth();
         
         // --- Encabezado ---
@@ -792,11 +794,14 @@ async function sendPayroll(empId) {
     const data = payrollHistory[`${empId}_${month}`];
 
     try {
-        // Generar PDF NATIVO (Texto Real + Vectores)
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        // 1. Detección robusta de la librería jsPDF
+        const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+        if (!jsPDFLib) throw new Error("La librería de PDF no se cargó correctamente. Por favor, refresca la página.");
+
+        const doc = new jsPDFLib();
         const pageWidth = doc.internal.pageSize.getWidth();
         
+        // --- Encabezado ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
         doc.text(currentSession.name || "EMPRESA", 15, 20);
@@ -815,6 +820,7 @@ async function sendPayroll(empId) {
         doc.setLineWidth(0.5);
         doc.line(15, 36, pageWidth - 15, 36);
         
+        // --- Datos Empleado ---
         doc.setFontSize(11);
         doc.text("DATOS DEL EMPLEADO", 15, 45);
         doc.setFontSize(9);
@@ -823,6 +829,7 @@ async function sendPayroll(empId) {
         doc.text(`PERIODO: desde 01/${month} al 30/${month}`, 15, 62);
         doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
         
+        // --- Tablas ---
         doc.autoTable({
             startY: 72,
             head: [['DESCRIPCIÓN DE INGRESOS', 'VALOR']],
@@ -876,15 +883,12 @@ async function sendPayroll(empId) {
         const url = URL.createObjectURL(finalPdfBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = opt.filename;
+        a.download = `Rol_${empId}_${month}.pdf`;
         a.click();
+        URL.revokeObjectURL(url);
     } catch (err) {
         console.error("Error descarga:", err);
-        alert("Error al generar el PDF.");
-    } finally {
-        modal.style.display = 'none';
-        modal.style.opacity = '1';
-        modal.style.zIndex = '5000';
+        alert(`❌ Error al generar el PDF: ${err.message}`);
     }
 }
 
