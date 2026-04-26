@@ -542,6 +542,12 @@ async function sendPayrollEmail(empId, silent = false) {
         return;
     }
 
+    const email = emp.Email || emp.email || emp.Correo || emp.CorreoElectronico || "";
+    if (!email) {
+        if (!silent) alert(`❌ El empleado ${emp.NombreCompleto || emp.names || emp.Title} no tiene un correo configurado.`);
+        return;
+    }
+
     try {
         // 1. Generar PDF en el navegador
         fillPdfTemplate(emp, data, month);
@@ -585,18 +591,22 @@ async function sendPayrollEmail(empId, silent = false) {
         });
 
         // 4. Enviar a Power Automate
+        const payload = {
+            empId: empId,
+            email: email, // Usamos la variable validada
+            names: emp.NombreCompleto || emp.names || emp.Title || "Empleado",
+            month: month,
+            fileContent: base64Pdf,
+            fileName: `Rol_${empId}_${month}.pdf`,
+            ruc: currentSession.ruc
+        };
+
+        console.log("Enviando a Microsoft:", { ...payload, fileContent: "(Base64...)" });
+
         const response = await fetch(FLOW_SEND_PAYROLL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                empId: empId,
-                email: emp.Email || emp.email,
-                names: emp.NombreCompleto || emp.names,
-                month: month,
-                fileContent: base64Pdf, // PDF Firmado
-                fileName: `Rol_${empId}_${month}.pdf`,
-                ruc: currentSession.ruc
-            })
+            body: JSON.stringify(payload)
         });
 
         if (response.ok) {
