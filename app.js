@@ -83,6 +83,9 @@ function initEventListeners() {
     const payrollForm = document.getElementById('payroll-form');
     if (payrollForm) payrollForm.onsubmit = handlePayrollSubmit;
 
+    const employerForm = document.getElementById('employer-form');
+    if (employerForm) employerForm.onsubmit = handleEmployerUpdate;
+
     const bulkBtn = document.getElementById('bulk-generate-btn');
     if(bulkBtn) bulkBtn.onclick = handleBulkGenerate;
 
