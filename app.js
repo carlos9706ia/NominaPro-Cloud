@@ -486,10 +486,28 @@ async function handleBulkGenerate() {
     }
 
     if (confirm(`¿Deseas GENERAR y ENVIAR automáticamente ${selected.length} roles de pago?`)) {
+        // Mostrar aviso de carga masivo
+        const loader = document.createElement('div');
+        loader.id = 'bulk-loader';
+        loader.innerHTML = `
+            <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-family:sans-serif;">
+                <div class="spinner" style="border:4px solid rgba(255,255,255,0.3);border-top:4px solid #fff;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:20px;"></div>
+                <h2 id="bulk-status">Generando y Firmando Roles...</h2>
+                <p id="bulk-counter">Procesando 0 de ${selected.length}</p>
+            </div>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+        `;
+        document.body.appendChild(loader);
+
+        let count = 0;
         for (const cb of selected) {
+            count++;
+            document.getElementById('bulk-counter').innerText = `Procesando ${count} de ${selected.length}`;
             const empId = cb.getAttribute('data-id');
             await sendPayrollEmail(empId, true); // Envío automático
         }
+        
+        document.body.removeChild(loader);
         alert("✅ Todos los roles han sido generados y enviados.");
     }
 }
@@ -509,13 +527,13 @@ async function sendPayrollEmail(empId, silent = false) {
         fillPdfTemplate(emp, data, month);
         const element = document.getElementById('pdf-template');
         
-        // Lo hacemos visible pero fuera de la vista para evitar el parpadeo
-        element.style.position = 'fixed';
-        element.style.left = '-5000px'; 
+        // Lo mostramos normal para asegurar captura real
         element.style.display = 'block';
+        element.style.opacity = '1';
+        element.style.left = '0';
         
-        // Espera mínima para renderizado (300ms es seguro para la mayoría de navegadores)
-        await new Promise(r => setTimeout(r, 300));
+        // Espera mínima para renderizado real
+        await new Promise(r => setTimeout(r, 500));
 
         const opt = {
             margin: 0,
@@ -646,11 +664,10 @@ async function sendPayroll(empId) {
     fillPdfTemplate(emp, data, month);
     const element = document.getElementById('pdf-template');
     
-    element.style.position = 'fixed';
-    element.style.left = '-5000px';
     element.style.display = 'block';
+    element.style.left = '0';
 
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 500));
 
     const opt = {
         margin: 0,
