@@ -61,7 +61,7 @@ if (currentSession && persistentEmployer) {
 }
 
 let employees = [];
-let payrollHistory = {};
+let payrollHistory = JSON.parse(localStorage.getItem('payrollHistory')) || {};
 let employer = persistentEmployer || { name: '', company: '', ruc: '' };
 
 // --- Initialization ---
@@ -428,15 +428,15 @@ function renderGeneratorList() {
     employees.forEach((emp) => {
         const id = emp.Title || emp.id;
         const key = `${id}_${month}`;
-        const config = payrollHistory[key] || { salary: 0, iess: 0, net: 0 };
+        const config = payrollHistory[key] || { baseSalary: 0, iess: 0, net: 0 };
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><input type="checkbox" class="emp-select" data-id="${id}"></td>
             <td>${emp.NombreCompleto || emp.names}</td>
-            <td>$${config.salary.toFixed(2)}</td>
-            <td>$${config.iess.toFixed(2)}</td>
-            <td><strong>$${config.net.toFixed(2)}</strong></td>
+            <td>$${(config.baseSalary || 0).toFixed(2)}</td>
+            <td>$${(config.iess || 0).toFixed(2)}</td>
+            <td><strong>$${(config.net || 0).toFixed(2)}</strong></td>
             <td>
                 <button class="action-btn config" title="Configurar Sueldo" onclick="openPayrollConfig('${id}')"><i data-lucide="settings"></i></button>
             </td>
@@ -470,32 +470,45 @@ window.openPayrollConfig = (empId) => {
 function handlePayrollSubmit(e) {
     e.preventDefault();
     const empId = document.getElementById('payroll-emp-id-hidden').value;
-    const baseSalary = parseFloat(document.getElementById('base-salary').value);
+    const baseSalary = parseFloat(document.getElementById('base-salary').value) || 0;
     const month = document.getElementById('payroll-month').value;
 
-    let extraIncome = 0;
+    const extrasIn = [];
     document.querySelectorAll('#income-list .extra-row').forEach(row => {
-        extraIncome += parseFloat(row.querySelector('.extra-val').value) || 0;
+        const desc = row.querySelector('.extra-desc').value;
+        const val = parseFloat(row.querySelector('.extra-val').value) || 0;
+        if (desc && val > 0) extrasIn.push({ desc, val });
     });
 
-    let extraDeductions = 0;
+    const extrasOut = [];
     document.querySelectorAll('#deduction-list .extra-row').forEach(row => {
-        extraDeductions += parseFloat(row.querySelector('.extra-val').value) || 0;
+        const desc = row.querySelector('.extra-desc').value;
+        const val = parseFloat(row.querySelector('.extra-val').value) || 0;
+        if (desc && val > 0) extrasOut.push({ desc, val });
     });
 
-    const iess = (baseSalary + extraIncome) * 0.0945;
-    const net = (baseSalary + extraIncome) - iess - extraDeductions;
+    const totalIn = baseSalary + extrasIn.reduce((acc, x) => acc + x.val, 0);
+    const iess = totalIn * 0.0945;
+    const totalOut = iess + extrasOut.reduce((acc, x) => acc + x.val, 0);
+    const net = totalIn - totalOut;
 
     payrollHistory[`${empId}_${month}`] = {
-        salary: baseSalary,
-        extraIncome: extraIncome,
-        extraDeductions: extraDeductions,
-        iess: iess,
-        net: net
+        baseSalary,
+        totalIn,
+        totalOut,
+        net,
+        iess,
+        extrasIn,
+        extrasOut,
+        days: 30
     };
+
+    // Guardar en localStorage para persistencia
+    localStorage.setItem('payrollHistory', JSON.stringify(payrollHistory));
 
     window.closeAllModals();
     renderGeneratorList();
+    alert("✅ Configuración de sueldo guardada con éxito.");
 }
 
 async function handleBulkGenerate() {
