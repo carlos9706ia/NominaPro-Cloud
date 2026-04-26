@@ -5,6 +5,16 @@ window.openRegisterModal = (e) => {
     if(modal) modal.style.display = 'flex';
 };
 
+window.openEmployeeModal = () => {
+    const modal = document.getElementById('employee-modal');
+    if(modal) modal.style.display = 'flex';
+};
+
+window.openEmployerModal = () => {
+    const modal = document.getElementById('employer-modal');
+    if(modal) modal.style.display = 'flex';
+};
+
 window.closeAllModals = () => {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 };
@@ -41,6 +51,9 @@ function initEventListeners() {
     
     const registerForm = document.getElementById('register-form');
     if(registerForm) registerForm.onsubmit = handleRegister;
+
+    const employeeForm = document.getElementById('employee-form');
+    if(employeeForm) employeeForm.onsubmit = handleSaveEmployee;
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
@@ -151,6 +164,43 @@ async function handleRegister(e) {
         }
     } catch (err) {
         alert("Error crítico: " + err.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function handleSaveEmployee(e) {
+    if(e) e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn.innerText;
+    btn.innerText = "Guardando...";
+    btn.disabled = true;
+
+    const payload = {
+        names: document.getElementById('emp-names').value,
+        id: document.getElementById('emp-id').value,
+        email: document.getElementById('emp-email').value,
+        paymentMethod: document.getElementById('emp-payment').value,
+        ruc: currentSession.ruc
+    };
+
+    try {
+        const response = await fetch(FLOW_SAVE_EMPLOYEE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert("¡Empleado guardado con éxito!");
+            window.closeAllModals();
+            loadDataFromMicrosoft(); // Recargar la lista
+        } else {
+            alert("Error al guardar empleado (Microsoft " + response.status + ").");
+        }
+    } catch (err) {
+        alert("Error de conexión: " + err.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
