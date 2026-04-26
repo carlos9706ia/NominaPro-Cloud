@@ -450,6 +450,7 @@ function renderGeneratorList() {
         `;
         list.appendChild(tr);
     });
+    lucide.createIcons();
 }
 
 // Función auxiliar para búsqueda robusta
