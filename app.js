@@ -553,13 +553,15 @@ async function sendPayrollEmail(empId, silent = false) {
         fillPdfTemplate(emp, data, month);
         const element = document.getElementById('pdf-template');
         
-        // Lo mostramos de forma INVISIBLE para el usuario
+        // Lo movemos FUERA DE LA PANTALLA para que sea invisible al usuario pero visible para la cámara
         element.style.display = 'block';
-        element.style.opacity = '0.01';
-        element.style.zIndex = '-1000';
+        element.style.position = 'fixed';
+        element.style.left = '-9999px';
+        element.style.top = '0';
+        element.style.opacity = '1'; 
         
-        // Espera mínima para renderizado real
-        await new Promise(r => setTimeout(r, 600));
+        // Espera de 1 segundo para renderizado total
+        await new Promise(r => setTimeout(r, 1000));
 
         const opt = {
             margin: 0,
