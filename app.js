@@ -13,6 +13,7 @@ let employer = { name: '', company: '', ruc: '' };
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("Aplicación Iniciada");
     lucide.createIcons();
     initDate();
     initEventListeners();
@@ -25,23 +26,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initEventListeners() {
+    console.log("Cargando eventos...");
+    
     // Login Form
-    document.getElementById('login-form').addEventListener('submit', handleLogin);
+    const loginForm = document.getElementById('login-form');
+    if(loginForm) loginForm.addEventListener('submit', handleLogin);
     
     // Register Form
-    document.getElementById('register-form').addEventListener('submit', handleRegister);
+    const registerForm = document.getElementById('register-form');
+    if(registerForm) registerForm.addEventListener('submit', handleRegister);
     
-    // Toggle Register Modal
-    document.getElementById('show-register').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('register-modal').classList.add('active');
-    });
+    // Toggle Register Modal (FORZADO)
+    const showRegBtn = document.getElementById('show-register');
+    if(showRegBtn) {
+        showRegBtn.onclick = (e) => {
+            e.preventDefault();
+            console.log("Abriendo modal de registro");
+            const modal = document.getElementById('register-modal');
+            if(modal) modal.style.display = 'flex';
+            else alert("Error: No se encuentra el modal de registro");
+        };
+    }
 
-    // Close Modals
+    // Close Modals (FORZADO)
     document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-        });
+        btn.onclick = () => {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        };
     });
 
     // Navigation
@@ -54,10 +65,12 @@ function initEventListeners() {
     });
 
     // Logout
-    document.getElementById('logout-btn').addEventListener('click', logout);
+    const logoutBtn = document.getElementById('logout-btn');
+    if(logoutBtn) logoutBtn.addEventListener('click', logout);
 
     // Generator Month Change
-    document.getElementById('payroll-month').addEventListener('change', renderGeneratorList);
+    const monthInput = document.getElementById('payroll-month');
+    if(monthInput) monthInput.addEventListener('change', renderGeneratorList);
 }
 
 function showLogin() {
@@ -111,6 +124,7 @@ async function handleLogin(e) {
 
 async function handleRegister(e) {
     e.preventDefault();
+    console.log("Enviando registro a Microsoft...");
     const payload = {
         ruc: document.getElementById('reg-ruc').value,
         name: document.getElementById('reg-company').value,
@@ -126,11 +140,13 @@ async function handleRegister(e) {
         });
 
         if (response.ok) {
-            alert("Empresa registrada. Ya puedes iniciar sesión.");
-            document.getElementById('register-modal').classList.remove('active');
+            alert("¡Empresa registrada con éxito! Ya puedes iniciar sesión.");
+            document.getElementById('register-modal').style.display = 'none';
+        } else {
+            alert("Error en el servidor de Microsoft.");
         }
     } catch (err) {
-        alert("Error al registrar.");
+        alert("Error al registrar: " + err.message);
     }
 }
 
@@ -190,6 +206,7 @@ function logout(e) {
 // --- UI Rendering ---
 function renderEmployees() {
     const list = document.getElementById('employees-table-body');
+    if(!list) return;
     list.innerHTML = '';
     employees.forEach((emp, index) => {
         const tr = document.createElement('tr');
@@ -209,6 +226,7 @@ function renderEmployees() {
 
 function renderGeneratorList() {
     const list = document.getElementById('generator-list');
+    if(!list) return;
     const month = document.getElementById('payroll-month').value;
     list.innerHTML = '';
     
@@ -312,9 +330,11 @@ function fillPdfTemplate(emp, data, month) {
 }
 
 function renderDashboard() {
-    document.getElementById('stat-employees').textContent = employees.length;
+    const el = document.getElementById('stat-employees');
+    if(el) el.textContent = employees.length;
 }
 
 function initDate() {
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+    const el = document.getElementById('current-date');
+    if(el) el.textContent = new Date().toLocaleDateString();
 }
