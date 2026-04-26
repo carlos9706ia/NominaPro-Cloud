@@ -268,6 +268,7 @@ async function loadDataFromMicrosoft() {
         
         renderEmployees();
         renderDashboard();
+        renderGeneratorList();
     } catch (err) {
         console.error("Error cargando datos:", err);
     }
