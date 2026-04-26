@@ -1,7 +1,6 @@
 // --- Funciones de Emergencia (Globales) ---
 window.openRegisterModal = (e) => {
     if(e) e.preventDefault();
-    console.log("Activando modal desde HTML");
     const modal = document.getElementById('register-modal');
     if(modal) modal.style.display = 'flex';
 };
@@ -10,7 +9,7 @@ window.closeAllModals = () => {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 };
 
-// --- Configuration (URLs de Power Automate) ---
+// --- Configuration ---
 const FLOW_REGISTER_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1e58f2780ef449dfbd9e99214777d549/triggers/manual/paths/invoke?api-version=1";
 const FLOW_LOGIN_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3c6016458c2843afb5091b6e1b0db33e/triggers/manual/paths/invoke?api-version=1";
 const FLOW_FETCH_DATA_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c1f37f25565f4d24bca4da0a75c8ce67/triggers/manual/paths/invoke?api-version=1";
@@ -37,20 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initEventListeners() {
-    // Formulario de Login
     const loginForm = document.getElementById('login-form');
     if(loginForm) loginForm.addEventListener('submit', handleLogin);
     
-    // Formulario de Registro
     const registerForm = document.getElementById('register-form');
-    if(registerForm) registerForm.addEventListener('submit', handleRegister);
+    if(registerForm) {
+        registerForm.onsubmit = handleRegister; // Método más directo
+    }
 
-    // Cerrar Modals (Botones X)
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
     });
 
-    // Navegación Sidebar
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -59,11 +56,9 @@ function initEventListeners() {
         });
     });
 
-    // Logout
     const logoutBtn = document.getElementById('logout-btn');
     if(logoutBtn) logoutBtn.addEventListener('click', logout);
 
-    // Cambio de Mes en Generador
     const monthInput = document.getElementById('payroll-month');
     if(monthInput) monthInput.addEventListener('change', renderGeneratorList);
 }
@@ -76,10 +71,9 @@ function showLogin() {
 function showApp() {
     document.getElementById('login-overlay').style.display = 'none';
     document.querySelector('.app-container').style.display = 'flex';
-    
     employer = currentSession.employer;
-    const dispCompany = document.getElementById('display-company');
-    if(dispCompany) dispCompany.textContent = employer.company;
+    const disp = document.getElementById('display-company');
+    if(disp) disp.textContent = employer.company;
     loadDataFromMicrosoft();
 }
 
@@ -119,7 +113,14 @@ async function handleLogin(e) {
 }
 
 async function handleRegister(e) {
-    e.preventDefault();
+    if(e) e.preventDefault();
+    console.log("Iniciando registro...");
+    
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn.innerText;
+    btn.innerText = "Registrando...";
+    btn.disabled = true;
+
     const payload = {
         ruc: document.getElementById('reg-ruc').value,
         name: document.getElementById('reg-company').value,
@@ -135,15 +136,20 @@ async function handleRegister(e) {
         });
 
         if (response.ok) {
-            alert("¡Empresa registrada con éxito!");
+            alert("¡EMPRESA REGISTRADA! Ya puedes cerrar esta ventana e iniciar sesión.");
             window.closeAllModals();
+        } else {
+            alert("Microsoft recibió el dato pero hubo un error en el flujo.");
         }
     } catch (err) {
-        alert("Error al registrar.");
+        alert("Error crítico: " + err.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 }
 
-// --- Data & Rendering ---
+// --- Data Fetching ---
 async function loadDataFromMicrosoft() {
     try {
         const response = await fetch(FLOW_FETCH_DATA_URL, {
@@ -249,7 +255,6 @@ function renderGeneratorList() {
     lucide.createIcons();
 }
 
-// --- Payroll Config & PDF ---
 window.openPayrollConfig = (empId) => {
     const salary = prompt("Ingrese el Sueldo Base:", "460");
     if (salary) {
