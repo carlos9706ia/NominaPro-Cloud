@@ -629,13 +629,13 @@ async function signPDF(pdfBlob) {
         const qrBase64 = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
         const qrImage = await pdfDoc.embedPng(qrBase64);
 
-        // 2. Estampar cuadro visual (Coordenadas dinámicas)
-        const boxW = 165;
-        const boxH = 38;
-        const x = 35; // Margen izquierdo
-        const y = 45; // Margen inferior
+        // 2. Estampar cuadro visual (POSICIÓN DERECHA Y ANCHO EXTENDIDO)
+        const boxW = 220; 
+        const boxH = 40;
+        const x = width - boxW - 40; // Alineado a la derecha con margen de 40
+        const y = 60; // Altura segura
 
-        // Fondo Blanco con borde azul fuerte
+        // Fondo Blanco con borde azul profesional
         firstPage.drawRectangle({
             x, y, width: boxW, height: boxH,
             borderColor: rgb(0.05, 0.25, 0.5),
@@ -645,34 +645,34 @@ async function signPDF(pdfBlob) {
 
         // Franja lateral "FIRMADO"
         firstPage.drawRectangle({
-            x: x, y: y, width: 20, height: boxH,
+            x: x, y: y, width: 22, height: boxH,
             color: rgb(0.05, 0.25, 0.5),
         });
         
         firstPage.drawText("FIRMADO", {
-            x: x + 6, y: y + 10, size: 8, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
+            x: x + 7, y: y + 10, size: 8, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
         });
 
-        // Textos descriptivos
+        // Textos descriptivos (Con espacio de sobra)
         firstPage.drawText("FIRMADO ELECTRÓNICAMENTE", {
-            x: x + 28, y: y + 26, size: 8.5, color: rgb(0.05, 0.25, 0.5), font: fontBold
+            x: x + 30, y: y + 26, size: 8.5, color: rgb(0.05, 0.25, 0.5), font: fontBold
         });
 
         const infoText = `Firmante: ${employer.name}\nFecha: ${new Date().toLocaleString()}\nEntidad: NominaPro Cloud`;
         firstPage.drawText(infoText, {
-            x: x + 28, y: y + 10, size: 7, color: rgb(0.2, 0.2, 0.2), lineHeight: 9
+            x: x + 30, y: y + 10, size: 7, color: rgb(0.2, 0.2, 0.2), lineHeight: 9
         });
 
-        // QR a la derecha (Separación total garantizada)
+        // QR a la derecha (Separación absoluta)
         firstPage.drawImage(qrImage, {
-            x: x + boxW - 32, y: y + 4, width: 28, height: 28
+            x: x + boxW - 35, y: y + 5, width: 30, height: 30
         });
 
         // Guardar con compresión
         const signedPdfBytes = await pdfDoc.save({ useObjectStreams: false });
         return new Blob([signedPdfBytes], { type: 'application/pdf' });
     } catch (err) {
-        console.error("Error firma digital avanzada:", err);
+        console.error("Error crítico firma:", err);
         throw err;
     }
 }
@@ -729,9 +729,9 @@ async function sendPayroll(empId) {
         margin: 0,
         filename: `Rol_${empId}_${month}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false, height: 1120 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-        pagebreak: { mode: 'avoid-all' } // Forzar evitar saltos de página
+        pagebreak: { mode: 'avoid-all' }
     };
 
     try {
