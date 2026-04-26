@@ -464,6 +464,15 @@ window.openPayrollConfig = (empId) => {
     document.getElementById('deduction-list').innerHTML = '';
 
     const modal = document.getElementById('payroll-modal');
+    
+    // Calcular días automáticos según el mes
+    const monthVal = document.getElementById('payroll-month').value;
+    if (monthVal) {
+        const [year, month] = monthVal.split('-');
+        const lastDay = new Date(year, month, 0).getDate();
+        document.getElementById('payroll-days').value = lastDay;
+    }
+
     if (modal) modal.style.display = 'flex';
 };
 
@@ -492,6 +501,8 @@ function handlePayrollSubmit(e) {
     const totalOut = iess + extrasOut.reduce((acc, x) => acc + x.val, 0);
     const net = totalIn - totalOut;
 
+    const days = parseInt(document.getElementById('payroll-days').value) || 30;
+
     payrollHistory[`${empId}_${month}`] = {
         baseSalary,
         totalIn,
@@ -500,7 +511,7 @@ function handlePayrollSubmit(e) {
         iess,
         extrasIn,
         extrasOut,
-        days: 30
+        days
     };
 
     // Guardar en localStorage para persistencia
