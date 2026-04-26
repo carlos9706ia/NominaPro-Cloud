@@ -1,13 +1,13 @@
 // --- Funciones de Emergencia (Globales) ---
 window.openRegisterModal = (e) => {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     const modal = document.getElementById('register-modal');
-    if(modal) modal.style.display = 'flex';
+    if (modal) modal.style.display = 'flex';
 };
 
 window.openEmployeeModal = () => {
     const modal = document.getElementById('employee-modal');
-    if(modal) {
+    if (modal) {
         modal.style.display = 'flex';
         toggleBankFields(); // Asegurar estado inicial correcto
     }
@@ -16,14 +16,14 @@ window.openEmployeeModal = () => {
 window.toggleBankFields = () => {
     const payment = document.getElementById('emp-payment').value;
     const bankFields = document.getElementById('bank-fields');
-    if(bankFields) {
+    if (bankFields) {
         bankFields.style.display = (payment === 'Transferencia') ? 'grid' : 'none';
     }
 };
 
 window.openEmployerModal = () => {
     const modal = document.getElementById('employer-modal');
-    if(modal) modal.style.display = 'flex';
+    if (modal) modal.style.display = 'flex';
 };
 
 window.addExtraRow = (listId) => {
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     initDate();
     initEventListeners();
-    
+
     if (currentSession) {
         showApp();
     } else {
@@ -72,19 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initEventListeners() {
     const loginForm = document.getElementById('login-form');
-    if(loginForm) loginForm.addEventListener('submit', handleLogin);
-    
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+
     const registerForm = document.getElementById('register-form');
-    if(registerForm) registerForm.onsubmit = handleRegister;
+    if (registerForm) registerForm.onsubmit = handleRegister;
 
     const employeeForm = document.getElementById('employee-form');
-    if(employeeForm) employeeForm.onsubmit = handleSaveEmployee;
+    if (employeeForm) employeeForm.onsubmit = handleSaveEmployee;
 
     const payrollForm = document.getElementById('payroll-form');
-    if(payrollForm) payrollForm.onsubmit = handlePayrollSubmit;
+    if (payrollForm) payrollForm.onsubmit = handlePayrollSubmit;
 
     const bulkBtn = document.getElementById('bulk-send-btn');
-    if(bulkBtn) bulkBtn.onclick = handleBulkSend;
+    if (bulkBtn) bulkBtn.onclick = handleBulkSend;
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
@@ -99,10 +99,10 @@ function initEventListeners() {
     });
 
     const logoutBtn = document.getElementById('logout-btn');
-    if(logoutBtn) logoutBtn.addEventListener('click', logout);
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
     const monthInput = document.getElementById('payroll-month');
-    if(monthInput) monthInput.addEventListener('change', renderGeneratorList);
+    if (monthInput) monthInput.addEventListener('change', renderGeneratorList);
 }
 
 function showLogin() {
@@ -114,12 +114,12 @@ function showApp() {
     document.getElementById('login-overlay').style.display = 'none';
     document.querySelector('.app-container').style.display = 'flex';
     employer = currentSession.employer;
-    
+
     const dispCompany = document.getElementById('display-company');
-    if(dispCompany) dispCompany.textContent = employer.company;
-    
+    if (dispCompany) dispCompany.textContent = employer.company;
+
     const dispCeo = document.getElementById('display-ceo');
-    if(dispCeo) dispCeo.textContent = employer.name;
+    if (dispCeo) dispCeo.textContent = employer.name;
 
     loadDataFromMicrosoft();
 }
@@ -144,10 +144,10 @@ async function handleLogin(e) {
                 if (data && (data.Title || data.RUC)) {
                     currentSession = {
                         ruc: ruc,
-                        employer: { 
-                            name: data.NombreCEO || data.ceo || 'CEO', 
-                            company: data.NombreEmpresa || data.name || 'Empresa', 
-                            ruc: data.Title || data.ruc 
+                        employer: {
+                            name: data.NombreCEO || data.ceo || 'CEO',
+                            company: data.NombreEmpresa || data.name || 'Empresa',
+                            ruc: data.Title || data.ruc
                         }
                     };
                     localStorage.setItem('currentSession', JSON.stringify(currentSession));
@@ -167,7 +167,7 @@ async function handleLogin(e) {
 }
 
 async function handleRegister(e) {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerText;
     btn.innerText = "Registrando...";
@@ -202,7 +202,7 @@ async function handleRegister(e) {
 }
 
 async function handleSaveEmployee(e) {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerText;
     btn.innerText = "Guardando...";
@@ -249,10 +249,10 @@ async function loadDataFromMicrosoft() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ruc: currentSession.ruc })
         });
-        
+
         const data = await response.json();
         employees = data.empleados || [];
-        
+
         payrollHistory = {};
         if (data.roles) {
             data.roles.forEach(role => {
@@ -265,7 +265,7 @@ async function loadDataFromMicrosoft() {
                 };
             });
         }
-        
+
         renderEmployees();
         renderDashboard();
         renderGeneratorList();
@@ -279,10 +279,10 @@ function switchSection(sectionId, navItem) {
     navItem.classList.add('active');
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
     const section = document.getElementById(sectionId);
-    if(section) section.classList.add('active');
-    
+    if (section) section.classList.add('active');
+
     const title = document.getElementById('section-title');
-    if(title) title.textContent = navItem.querySelector('span').textContent;
+    if (title) title.textContent = navItem.querySelector('span').textContent;
 
     if (sectionId === 'generator') renderGeneratorList();
     if (sectionId === 'dashboard') renderDashboard();
@@ -298,7 +298,7 @@ function logout(e) {
 
 function renderEmployees() {
     const list = document.getElementById('employees-table-body');
-    if(!list) return;
+    if (!list) return;
     list.innerHTML = '';
     employees.forEach((emp) => {
         const tr = document.createElement('tr');
@@ -318,17 +318,17 @@ function renderEmployees() {
 
 function renderGeneratorList() {
     const list = document.getElementById('generator-list');
-    if(!list) return;
+    if (!list) return;
     const month = document.getElementById('payroll-month').value;
     list.innerHTML = '';
-    
+
     if (!month) return;
 
     employees.forEach((emp) => {
         const id = emp.Title || emp.id;
         const key = `${id}_${month}`;
         const config = payrollHistory[key] || { salary: 0, iess: 0, net: 0 };
-        
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><input type="checkbox" class="emp-select" data-id="${id}"></td>
@@ -354,16 +354,16 @@ function renderGeneratorList() {
 
 window.openPayrollConfig = (empId) => {
     const emp = employees.find(e => (e.Title || e.id) === empId);
-    if(!emp) return;
+    if (!emp) return;
 
     document.getElementById('payroll-emp-id-hidden').value = empId;
     document.getElementById('payroll-emp-name').textContent = emp.NombreCompleto || emp.names;
     document.getElementById('payroll-emp-id-display').textContent = "ID: " + (emp.Title || emp.id);
     document.getElementById('income-list').innerHTML = '';
     document.getElementById('deduction-list').innerHTML = '';
-    
+
     const modal = document.getElementById('payroll-modal');
-    if(modal) modal.style.display = 'flex';
+    if (modal) modal.style.display = 'flex';
 };
 
 function handlePayrollSubmit(e) {
@@ -385,12 +385,12 @@ function handlePayrollSubmit(e) {
     const iess = (baseSalary + extraIncome) * 0.0945;
     const net = (baseSalary + extraIncome) - iess - extraDeductions;
 
-    payrollHistory[`${empId}_${month}`] = { 
-        salary: baseSalary, 
+    payrollHistory[`${empId}_${month}`] = {
+        salary: baseSalary,
         extraIncome: extraIncome,
         extraDeductions: extraDeductions,
-        iess: iess, 
-        net: net 
+        iess: iess,
+        net: net
     };
 
     window.closeAllModals();
@@ -419,7 +419,7 @@ async function sendPayrollEmail(empId, silent = false) {
     const data = payrollHistory[`${empId}_${month}`];
 
     if (!data || data.net === 0) {
-        if(!silent) alert("Primero configura el sueldo del empleado.");
+        if (!silent) alert("Primero configura el sueldo del empleado.");
         return;
     }
 
@@ -442,13 +442,13 @@ async function sendPayrollEmail(empId, silent = false) {
         });
 
         if (response.ok) {
-            if(!silent) alert(`✅ Correo enviado con éxito a ${emp.Email || emp.email}`);
+            if (!silent) alert(`✅ Correo enviado con éxito a ${emp.Email || emp.email}`);
         } else {
-            if(!silent) alert("Error al enviar el correo. Revisa el flujo en Microsoft.");
+            if (!silent) alert("Error al enviar el correo. Revisa el flujo en Microsoft.");
         }
     } catch (err) {
         console.error("Error envío:", err);
-        if(!silent) alert("Error de conexión al enviar el correo.");
+        if (!silent) alert("Error de conexión al enviar el correo.");
     }
 }
 
@@ -476,10 +476,10 @@ async function initDate() {
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const monthStr = `${now.getFullYear()}-${month}`;
     const input = document.getElementById('payroll-month');
-    if(input) {
+    if (input) {
         input.value = monthStr;
         // Forzamos un renderizado inicial si ya hay sesión
-        if(currentSession) renderGeneratorList();
+        if (currentSession) renderGeneratorList();
     }
 }
 
@@ -491,14 +491,14 @@ async function sendPayroll(empId) {
     const template = document.getElementById('pdf-template');
     fillPdfTemplate(emp, data, month);
     template.style.display = 'block';
-    
+
     const pdfOutput = await html2pdf().set({
         margin: 10,
         filename: 'rol.pdf',
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(template).outputPdf('datauristring');
-    
+
     const base64Pdf = pdfOutput.split(',')[1];
     template.style.display = 'none';
 
@@ -545,10 +545,10 @@ function fillPdfTemplate(emp, data, month) {
 
 function renderDashboard() {
     const el = document.getElementById('stat-employees');
-    if(el) el.textContent = employees.length;
+    if (el) el.textContent = employees.length;
 }
 
 function initDate() {
     const el = document.getElementById('current-date');
-    if(el) el.textContent = new Date().toLocaleDateString();
+    if (el) el.textContent = new Date().toLocaleDateString();
 }
