@@ -538,9 +538,25 @@ function fillPdfTemplate(emp, data, month) {
     document.getElementById('pdf-emp-id').textContent = emp.Title || emp.id;
     document.getElementById('pdf-salary').textContent = data.salary.toFixed(2);
     document.getElementById('pdf-iess').textContent = data.iess.toFixed(2);
-    document.getElementById('pdf-total-income').textContent = data.salary.toFixed(2);
-    document.getElementById('pdf-total-deductions').textContent = data.iess.toFixed(2);
+    document.getElementById('pdf-other-deductions').textContent = (data.extraDeductions || 0).toFixed(2);
+    document.getElementById('pdf-total-income').textContent = (data.salary + (data.extraIncome || 0)).toFixed(2);
+    document.getElementById('pdf-total-deductions').textContent = (data.iess + (data.extraDeductions || 0)).toFixed(2);
     document.getElementById('pdf-net-pay').textContent = `$${data.net.toFixed(2)}`;
+    
+    const method = emp.FormaPago || emp.paymentMethod || 'EFECTIVO';
+    document.getElementById('pdf-payment-method').textContent = method.toUpperCase();
+
+    const bankRow = document.getElementById('pdf-bank-row');
+    const bankInfo = document.getElementById('pdf-bank-info');
+    if (method.toUpperCase().includes('TRANSFERENCIA')) {
+        bankRow.style.display = 'block';
+        const bank = emp.Banco || emp.bank || '---';
+        const type = emp.TipoCuenta || emp.accountType || '---';
+        const acc = emp.Cuenta || emp.account || '---';
+        bankInfo.textContent = `${bank} | ${type} | ${acc}`;
+    } else {
+        bankRow.style.display = 'none';
+    }
 }
 
 function renderDashboard() {
