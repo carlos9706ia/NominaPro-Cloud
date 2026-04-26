@@ -273,7 +273,52 @@
         </div>
     </div>
 
-    <!-- Hidden PDF Template Container (Used by html2pdf) -->
+    <div id="payroll-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Configurar Rol de Pago</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="payroll-form" class="premium-form">
+                <input type="hidden" id="payroll-emp-id-hidden">
+                <div id="payroll-employee-info" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 10px; border-left: 4px solid var(--primary);">
+                    <strong id="payroll-emp-name">Cargando...</strong><br>
+                    <span id="payroll-emp-id-display" class="text-sm opacity-70">ID: ---</span>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Sueldo Base ($)</label>
+                        <input type="number" id="base-salary" step="0.01" required value="460.00">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.9rem; color: var(--success);">+ Otros Ingresos (Bonos, Horas Extras)</h3>
+                        <button type="button" class="btn btn-small btn-success" onclick="addExtraRow('income-list')">
+                            <i data-lucide="plus"></i> Añadir
+                        </button>
+                    </div>
+                    <div id="income-list"></div>
+                </div>
+
+                <div class="form-section" style="border-top: 1px solid #eee; padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.9rem; color: var(--danger);">- Otros Egresos (Anticipos, Multas)</h3>
+                        <button type="button" class="btn btn-small btn-danger" onclick="addExtraRow('deduction-list')">
+                            <i data-lucide="plus"></i> Añadir
+                        </button>
+                    </div>
+                    <div id="deduction-list"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block">Aplicar y Calcular</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="pdf-template" style="display: none;">
         <div class="pdf-container">
             <div class="pdf-header">

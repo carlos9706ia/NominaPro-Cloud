@@ -26,6 +26,20 @@ window.openEmployerModal = () => {
     if(modal) modal.style.display = 'flex';
 };
 
+window.addExtraRow = (listId) => {
+    const list = document.getElementById(listId);
+    const div = document.createElement('div');
+    div.className = 'extra-row';
+    div.style = 'display: flex; gap: 0.5rem; margin-bottom: 0.5rem;';
+    div.innerHTML = `
+        <input type="text" placeholder="Descripción" class="extra-desc" style="flex: 2; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        <input type="number" placeholder="0.00" class="extra-val" step="0.01" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        <button type="button" class="btn btn-small btn-danger" onclick="this.parentElement.remove()" style="padding: 0.5rem;"><i data-lucide="trash-2"></i></button>
+    `;
+    list.appendChild(div);
+    lucide.createIcons();
+};
+
 window.closeAllModals = () => {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 };
@@ -65,6 +79,12 @@ function initEventListeners() {
 
     const employeeForm = document.getElementById('employee-form');
     if(employeeForm) employeeForm.onsubmit = handleSaveEmployee;
+
+    const payrollForm = document.getElementById('payroll-form');
+    if(payrollForm) payrollForm.onsubmit = handlePayrollSubmit;
+
+    const bulkBtn = document.getElementById('bulk-generate-btn');
+    if(bulkBtn) bulkBtn.onclick = handleBulkPreview;
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
@@ -328,16 +348,54 @@ function renderGeneratorList() {
 }
 
 window.openPayrollConfig = (empId) => {
-    const salary = prompt("Ingrese el Sueldo Base:", "460");
-    if (salary) {
-        const s = parseFloat(salary);
-        const iess = s * 0.0945;
-        const net = s - iess;
-        const month = document.getElementById('payroll-month').value;
-        payrollHistory[`${empId}_${month}`] = { salary: s, iess: iess, net: net };
-        renderGeneratorList();
-    }
+    const emp = employees.find(e => (e.Title || e.id) === empId);
+    if(!emp) return;
+
+    document.getElementById('payroll-emp-id-hidden').value = empId;
+    document.getElementById('payroll-emp-name').textContent = emp.NombreCompleto || emp.names;
+    document.getElementById('payroll-emp-id-display').textContent = "ID: " + (emp.Title || emp.id);
+    document.getElementById('income-list').innerHTML = '';
+    document.getElementById('deduction-list').innerHTML = '';
+    
+    const modal = document.getElementById('payroll-modal');
+    if(modal) modal.style.display = 'flex';
 };
+
+function handlePayrollSubmit(e) {
+    e.preventDefault();
+    const empId = document.getElementById('payroll-emp-id-hidden').value;
+    const baseSalary = parseFloat(document.getElementById('base-salary').value);
+    const month = document.getElementById('payroll-month').value;
+
+    let extraIncome = 0;
+    document.querySelectorAll('#income-list .extra-row').forEach(row => {
+        extraIncome += parseFloat(row.querySelector('.extra-val').value) || 0;
+    });
+
+    let extraDeductions = 0;
+    document.querySelectorAll('#deduction-list .extra-row').forEach(row => {
+        extraDeductions += parseFloat(row.querySelector('.extra-val').value) || 0;
+    });
+
+    const iess = (baseSalary + extraIncome) * 0.0945;
+    const net = (baseSalary + extraIncome) - iess - extraDeductions;
+
+    payrollHistory[`${empId}_${month}`] = { 
+        salary: baseSalary, 
+        extraIncome: extraIncome,
+        extraDeductions: extraDeductions,
+        iess: iess, 
+        net: net 
+    };
+
+    window.closeAllModals();
+    renderGeneratorList();
+}
+
+function handleBulkPreview() {
+    alert("Generando previsualización de todos los empleados seleccionados...");
+    renderGeneratorList();
+}
 
 async function sendPayroll(empId) {
     const emp = employees.find(e => (e.Title || e.id) === empId);
