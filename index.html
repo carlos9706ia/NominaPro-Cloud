@@ -8,6 +8,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        function openRegisterModal(e) {
+            if(e) e.preventDefault();
+            var modal = document.getElementById('register-modal');
+            if(modal) modal.style.display = 'flex';
+            else alert("No se encontró el modal");
+        }
+        function closeAllModals() {
+            var modals = document.getElementsByClassName('modal');
+            for(var i=0; i<modals.length; i++) {
+                modals[i].style.display = 'none';
+            }
+        }
+    </script>
 </head>
 <body>
     <!-- Login Screen Overlay -->
