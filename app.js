@@ -605,7 +605,9 @@ async function sendPayrollEmail(empId, silent = false) {
         doc.setFontSize(9);
         doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names || emp.Title || ""}`, 15, 52);
         doc.text(`CÉDULA: ${emp.Cedula || emp.id || emp.Title || ""}`, 15, 57);
-        doc.text(`PERIODO: desde 01/${month} al 30/${month}`, 15, 62);
+        const [y, m] = month.split('-');
+        const lastDay = new Date(y, m, 0).getDate();
+        doc.text(`PERIODO: desde 01/${m}-${y} al ${lastDay}/${m}-${y}`, 15, 62);
         doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
         
         // --- Tabla Ingresos ---
@@ -855,7 +857,9 @@ async function sendPayroll(empId) {
         doc.setFontSize(9);
         doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names || emp.Title || ""}`, 15, 52);
         doc.text(`CÉDULA: ${emp.Cedula || emp.id || emp.Title || ""}`, 15, 57);
-        doc.text(`PERIODO: desde 01/${month} al 30/${month}`, 15, 62);
+        const [y2, m2] = month.split('-');
+        const lastDay2 = new Date(y2, m2, 0).getDate();
+        doc.text(`PERIODO: desde 01/${m2}-${y2} al ${lastDay2}/${m2}-${y2}`, 15, 62);
         doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
         
         // --- Tablas ---
