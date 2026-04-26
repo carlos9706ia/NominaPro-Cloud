@@ -508,17 +508,26 @@ async function sendPayrollEmail(empId, silent = false) {
         // 1. Generar PDF en el navegador
         fillPdfTemplate(emp, data, month);
         const element = document.getElementById('pdf-template');
+        
+        // Lo hacemos visible pero fuera de la vista para evitar el parpadeo
+        element.style.position = 'fixed';
+        element.style.left = '-5000px'; 
         element.style.display = 'block';
         
+        // Espera mínima para renderizado (300ms es seguro para la mayoría de navegadores)
+        await new Promise(r => setTimeout(r, 300));
+
         const opt = {
             margin: 0,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
         element.style.display = 'none';
+        element.style.left = '0'; // Reset para previsualización normal
+        element.style.position = 'fixed';
 
         // 2. Firmar el PDF
         const signedPdfBlob = await signPDF(pdfBlob);
@@ -613,6 +622,7 @@ window.previewPayroll = (empId) => {
 
     fillPdfTemplate(emp, data, month);
     const template = document.getElementById('pdf-template');
+    template.style.left = '0';
     template.style.display = 'block';
 };
 
@@ -635,13 +645,18 @@ async function sendPayroll(empId) {
 
     fillPdfTemplate(emp, data, month);
     const element = document.getElementById('pdf-template');
+    
+    element.style.position = 'fixed';
+    element.style.left = '-5000px';
     element.style.display = 'block';
+
+    await new Promise(r => setTimeout(r, 300));
 
     const opt = {
         margin: 0,
         filename: `Rol_${empId}_${month}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
