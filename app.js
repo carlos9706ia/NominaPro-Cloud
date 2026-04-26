@@ -561,8 +561,8 @@ async function sendPayrollEmail(empId, silent = false) {
     const month = document.getElementById('payroll-month').value;
     const data = payrollHistory[`${empId}_${month}`];
 
-    if (!data || data.net === 0) {
-        if (!silent) alert("Primero configura el sueldo del empleado.");
+    if (!data || (typeof data.baseSalary === 'undefined' && typeof data.salary === 'undefined')) {
+        if (!silent) alert("❌ Primero configura el sueldo del empleado para este mes.");
         return;
     }
 
@@ -819,7 +819,7 @@ async function sendPayroll(empId) {
     const month = document.getElementById('payroll-month').value;
     const data = payrollHistory[`${empId}_${month}`];
 
-    if (!data || typeof data.baseSalary === 'undefined') {
+    if (!data || (typeof data.baseSalary === 'undefined' && typeof data.salary === 'undefined')) {
         alert("❌ Primero configura el sueldo del empleado para este mes.");
         return;
     }
