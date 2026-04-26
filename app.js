@@ -83,8 +83,8 @@ function initEventListeners() {
     const payrollForm = document.getElementById('payroll-form');
     if (payrollForm) payrollForm.onsubmit = handlePayrollSubmit;
 
-    const bulkBtn = document.getElementById('bulk-send-btn');
-    if (bulkBtn) bulkBtn.onclick = handleBulkSend;
+    const bulkBtn = document.getElementById('bulk-generate-btn');
+    if(bulkBtn) bulkBtn.onclick = handleBulkGenerate;
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
@@ -361,7 +361,7 @@ function renderGeneratorList() {
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="action-btn" title="Previsualizar" onclick="previewPayroll('${id}')" style="color: var(--secondary);"><i data-lucide="eye"></i></button>
                     <button class="action-btn" title="Descargar PDF" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--primary);"><i data-lucide="download"></i></button>
-                    <button class="action-btn" title="Enviar por Correo" onclick="sendPayrollEmail('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--success);"><i data-lucide="mail"></i></button>
+                    <button class="action-btn" title="Re-enviar por Correo" onclick="sendPayrollEmail('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--success);"><i data-lucide="refresh-cw"></i></button>
                 </div>
             </td>
         `;
@@ -415,19 +415,19 @@ function handlePayrollSubmit(e) {
     renderGeneratorList();
 }
 
-async function handleBulkSend() {
+async function handleBulkGenerate() {
     const selected = document.querySelectorAll('.emp-select:checked');
     if (selected.length === 0) {
         alert("Por favor, selecciona al menos un empleado.");
         return;
     }
 
-    if (confirm(`¿Estás seguro de enviar ${selected.length} roles de pago por correo?`)) {
+    if (confirm(`¿Deseas GENERAR y ENVIAR automáticamente ${selected.length} roles de pago?`)) {
         for (const cb of selected) {
             const empId = cb.getAttribute('data-id');
-            await sendPayrollEmail(empId, true); // true para modo silencioso
+            await sendPayrollEmail(empId, true); // Envío automático
         }
-        alert("✅ Todos los correos han sido procesados.");
+        alert("✅ Todos los roles han sido generados y enviados.");
     }
 }
 
@@ -548,10 +548,23 @@ async function sendPayroll(empId) {
 }
 
 function fillPdfTemplate(emp, data, month) {
+    // Cálculo de fechas del mes
+    const [year, monthNum] = month.split('-');
+    const lastDay = new Date(year, monthNum, 0).getDate();
+    const dateRange = `desde: 01/${monthNum}/${year} al ${lastDay}/${monthNum}/${year}`;
+    
+    // Sello de tiempo generación
+    const now = new Date();
+    const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     document.getElementById('pdf-company-name').textContent = employer.company;
     document.getElementById('pdf-ruc').textContent = employer.ruc;
     document.getElementById('pdf-owner').textContent = employer.name;
     document.getElementById('pdf-period').textContent = `MES DE ${month}`;
+    document.getElementById('pdf-date-range').textContent = dateRange;
+    document.getElementById('pdf-days').textContent = lastDay > 30 ? "30" : lastDay; // Ajuste estándar a 30 días
+    document.getElementById('pdf-generation-time').textContent = timestamp;
+    
     document.getElementById('pdf-emp-name').textContent = emp.NombreCompleto || emp.names;
     document.getElementById('pdf-emp-id').textContent = emp.Title || emp.id;
     document.getElementById('pdf-salary').textContent = data.salary.toFixed(2);

@@ -188,9 +188,9 @@
                             <label>Mes de Pago</label>
                             <input type="month" id="payroll-month">
                         </div>
-                        <button id="bulk-send-btn" class="btn btn-primary" style="background: var(--success);">
-                            <i data-lucide="mail"></i>
-                            Enviar Roles Seleccionados
+                        <button id="bulk-generate-btn" class="btn btn-primary" style="background: var(--primary);">
+                            <i data-lucide="play-circle"></i>
+                            Generar Roles Seleccionados
                         </button>
                     </div>
                     <div class="table-container">
@@ -339,6 +339,7 @@
                 <div class="data-grid">
                     <p><strong>NOMBRES:</strong> <span id="pdf-emp-name"></span></p>
                     <p><strong>CÉDULA:</strong> <span id="pdf-emp-id"></span></p>
+                    <p><strong>PERIODO:</strong> <span id="pdf-date-range"></span></p>
                     <p><strong>DÍAS TRABAJADOS:</strong> <span id="pdf-days">30</span></p>
                 </div>
             </div>
@@ -418,8 +419,9 @@
                 </div>
             </div>
             
-            <div class="pdf-footer">
-                <p>Este documento es un comprobante legal de pago de haberes conforme a la normativa vigente.</p>
+            <div class="pdf-footer" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; font-size: 8pt; color: #666; display: flex; justify-content: space-between;">
+                <span>Este documento es un comprobante legal de pago de haberes conforme a la normativa vigente.</span>
+                <span>Generado el: <span id="pdf-generation-time"></span></span>
             </div>
         </div>
     </div>
