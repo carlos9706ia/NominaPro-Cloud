@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Roles de Pago - Premium</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- Login Screen Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <i data-lucide="shield-check" class="login-icon"></i>
+                <h1>Acceso Corporativo</h1>
+                <p>Ingresa los datos de tu empresa</p>
+            </div>
+            <form id="login-form" class="premium-form">
+                <div class="form-group">
+                    <label for="login-ruc">RUC de la Empresa</label>
+                    <input type="text" id="login-ruc" placeholder="Ej. 1790000000001" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-pin">PIN de Acceso</label>
+                    <input type="password" id="login-pin" placeholder="****" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Entrar al Sistema</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+                <div class="login-footer">
+                    <p>¿Empresa nueva? <a href="#" id="show-register">Regístrate aquí</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="app-container" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i data-lucide="calculator" class="logo-icon"></i>
+                    <span>NóminaPro</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-section="employer">
+                    <i data-lucide="building-2"></i>
+                    <span>Datos Empresa</span>
+                </a>
+                <a href="#" class="nav-item" data-section="employees">
+                    <i data-lucide="users"></i>
+                    <span>Empleados</span>
+                </a>
+                <a href="#" class="nav-item" data-section="generator">
+                    <i data-lucide="printer"></i>
+                    <span>Generar Roles</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="nav-item logout">
+                    <i data-lucide="log-out"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="current-info">
+                    <h2 id="section-title">Dashboard</h2>
+                    <p id="current-date"></p>
+                </div>
+                <div class="user-profile">
+                    <span id="display-company">Cargando...</span>
+                    <div class="avatar">C</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i data-lucide="users" class="stat-icon blue"></i>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Empleados</span>
+                            <h3 id="stat-employees">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i data-lucide="banknote" class="stat-icon green"></i>
+                        <div class="stat-info">
+                            <span class="stat-label">Nómina del Mes</span>
+                            <h3 id="stat-payroll">$0.00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i data-lucide="history" class="stat-icon purple"></i>
+                        <div class="stat-info">
+                            <span class="stat-label">Roles Emitidos</span>
+                            <h3 id="stat-roles">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Employer Config Section -->
+            <section id="employer" class="content-section">
+                <div class="card">
+                    <h3>Configuración de la Empresa</h3>
+                    <form id="employer-form" class="premium-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="company-name">Nombre de la Empresa</label>
+                                <input type="text" id="company-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="company-ruc">RUC</label>
+                                <input type="text" id="company-ruc" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="company-owner">Representante Legal (CEO)</label>
+                                <input type="text" id="company-owner" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Employees Management Section -->
+            <section id="employees" class="content-section">
+                <div class="section-header">
+                    <h3>Gestión de Personal</h3>
+                    <button id="add-employee-btn" class="btn btn-primary">
+                        <i data-lucide="user-plus"></i>
+                        Nuevo Empleado
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Cédula</th>
+                                <th>Correo</th>
+                                <th>Forma de Pago</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-table-body">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Payroll Generator Section -->
+            <section id="generator" class="content-section">
+                <div class="card payroll-config">
+                    <div class="config-row">
+                        <div class="form-group">
+                            <label>Mes de Pago</label>
+                            <input type="month" id="payroll-month">
+                        </div>
+                        <button id="bulk-generate-btn" class="btn btn-secondary">
+                            <i data-lucide="files"></i>
+                            Pre-visualizar Todos
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table id="generator-table">
+                            <thead>
+                                <tr>
+                                    <th>Sel.</th>
+                                    <th>Empleado</th>
+                                    <th>Sueldo Base</th>
+                                    <th>IESS (9.45%)</th>
+                                    <th>Neto</th>
+                                    <th>Acciones</th>
+                                    <th>Correo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="generator-list">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="employee-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Agregar Empleado</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="employee-form" class="premium-form">
+                <input type="hidden" id="edit-index">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="emp-names">Nombres Completos</label>
+                        <input type="text" id="emp-names" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emp-id">Número de Cédula</label>
+                        <input type="text" id="emp-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emp-email">Correo Electrónico</label>
+                        <input type="email" id="emp-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emp-payment">Forma de Pago</label>
+                        <select id="emp-payment">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="bank-info" style="display: none;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="emp-bank">Institución Financiera</label>
+                            <input type="text" id="emp-bank">
+                        </div>
+                        <div class="form-group">
+                            <label for="emp-account">Número de Cuenta</label>
+                            <input type="text" id="emp-account">
+                        </div>
+                        <div class="form-group">
+                            <label for="emp-account-type">Tipo de Cuenta</label>
+                            <select id="emp-account-type">
+                                <option value="Ahorros">Ahorros</option>
+                                <option value="Corriente">Corriente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar Empleado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden PDF Template Container (Used by html2pdf) -->
+    <div id="pdf-template" style="display: none;">
+        <div class="pdf-container">
+            <div class="pdf-header">
+                <div class="company-info">
+                    <h1 id="pdf-company-name">NOMBRE EMPRESA</h1>
+                    <p>RUC: <span id="pdf-ruc">0000000000001</span></p>
+                    <p>REPRESENTANTE: <span id="pdf-owner">NOMBRE REPRESENTANTE</span></p>
+                </div>
+                <div class="pdf-title">
+                    <h2>ROL DE PAGO INDIVIDUAL</h2>
+                    <p id="pdf-period">MES DE ENERO 2024</p>
+                </div>
+            </div>
+
+            <div class="pdf-employee-data">
+                <h3>DATOS DEL EMPLEADO</h3>
+                <div class="data-grid">
+                    <p><strong>NOMBRES:</strong> <span id="pdf-emp-name"></span></p>
+                    <p><strong>CÉDULA:</strong> <span id="pdf-emp-id"></span></p>
+                    <p><strong>DÍAS TRABAJADOS:</strong> <span id="pdf-days">30</span></p>
+                </div>
+            </div>
+
+            <div class="pdf-payroll-details">
+                <div class="details-row">
+                    <div class="column">
+                        <table class="payroll-table">
+                            <thead>
+                                <tr>
+                                    <th>Descripción de Ingresos</th>
+                                    <th class="text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Sueldo Unificado</td>
+                                    <td class="text-right" id="pdf-salary">0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total Ingresos</th>
+                                    <th class="text-right" id="pdf-total-income">0.00</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="column">
+                        <table class="payroll-table">
+                            <thead>
+                                <tr>
+                                    <th>Descripción de Descuentos</th>
+                                    <th class="text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Aporte Personal IESS (9.45%)</td>
+                                    <td class="text-right" id="pdf-iess">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Otros Descuentos / Anticipos</td>
+                                    <td class="text-right" id="pdf-other-deductions">0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total Descuentos</th>
+                                    <th class="text-right" id="pdf-total-deductions">0.00</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pdf-total-row">
+                <div class="net-to-pay">
+                    <span>NETO A RECIBIR</span>
+                    <h2 id="pdf-net-pay">$0.00</h2>
+                </div>
+                <div class="payment-method-info">
+                    <p>FORMA DE PAGO: <span id="pdf-payment-method">EFECTIVO</span></p>
+                    <p id="pdf-bank-detail"></p>
+                </div>
+            </div>
+
+            <div class="pdf-signatures">
+                <div class="signature-box">
+                    <div class="sig-line"></div>
+                    <p>Firma del Empleador</p>
+                </div>
+                <div class="signature-box">
+                    <div class="sig-line"></div>
+                    <p>Firma del Empleado</p>
+                </div>
+            </div>
+            
+            <div class="pdf-footer">
+                <p>Este documento es un comprobante legal de pago de haberes conforme a la normativa vigente.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal (For new companies) -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registrar Nueva Empresa</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="register-form" class="premium-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="reg-company">Nombre de la Empresa</label>
+                        <input type="text" id="reg-company" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-ruc">RUC (ID Fiscal)</label>
+                        <input type="text" id="reg-ruc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-ceo">Nombre del CEO/Dueño</label>
+                        <input type="text" id="reg-ceo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-pin">PIN de Seguridad (4 dígitos)</label>
+                        <input type="password" id="reg-pin" maxlength="4" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EmailJS SDK (Mantener por si acaso o eliminar si se migra todo a Power Automate) -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
