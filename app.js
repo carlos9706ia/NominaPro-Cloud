@@ -201,6 +201,40 @@ async function handleRegister(e) {
     }
 }
 
+async function handleEmployerUpdate(e) {
+    if(e) e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.innerText = "Guardando...";
+
+    const p12File = document.getElementById('p12-file').files[0];
+    let p12Base64 = currentSession.p12 || "";
+    
+    if (p12File) {
+        p12Base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(p12File);
+        });
+    }
+
+    const updatedData = {
+        name: document.getElementById('company-owner').value,
+        company: document.getElementById('company-name').value,
+        ruc: document.getElementById('company-ruc').value,
+        p12: p12Base64,
+        p12Pass: document.getElementById('p12-password').value || currentSession.p12Pass
+    };
+
+    // Actualizar sesión local
+    currentSession = { ...currentSession, ...updatedData };
+    localStorage.setItem('currentSession', JSON.stringify(currentSession));
+    employer = updatedData;
+    
+    alert("Configuración actualizada con éxito.");
+    btn.innerText = "Guardar Cambios";
+    renderDashboard();
+}
+
 async function handleSaveEmployee(e) {
     if (e) e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
@@ -442,6 +476,32 @@ async function sendPayrollEmail(empId, silent = false) {
     }
 
     try {
+        // 1. Generar PDF en el navegador
+        fillPdfTemplate(emp, data, month);
+        const element = document.getElementById('pdf-template');
+        element.style.display = 'block';
+        
+        const opt = {
+            margin: 0,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
+        element.style.display = 'none';
+
+        // 2. Firmar el PDF
+        const signedPdfBlob = await signPDF(pdfBlob);
+        
+        // 3. Convertir a Base64 para enviar
+        const reader = new FileReader();
+        const base64Pdf = await new Promise(resolve => {
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(signedPdfBlob);
+        });
+
+        // 4. Enviar a Power Automate
         const response = await fetch(FLOW_SEND_PAYROLL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -450,23 +510,61 @@ async function sendPayrollEmail(empId, silent = false) {
                 email: emp.Email || emp.email,
                 names: emp.NombreCompleto || emp.names,
                 month: month,
-                salary: data.salary,
-                extraIncome: data.extraIncome || 0,
-                extraDeductions: data.extraDeductions || 0,
-                iess: data.iess,
-                net: data.net,
+                fileContent: base64Pdf, // PDF Firmado
+                fileName: `Rol_${empId}_${month}.pdf`,
                 ruc: currentSession.ruc
             })
         });
 
         if (response.ok) {
-            if (!silent) alert(`✅ Correo enviado con éxito a ${emp.Email || emp.email}`);
+            if (!silent) alert(`✅ Rol firmado y enviado con éxito a ${emp.Email || emp.email}`);
         } else {
-            if (!silent) alert("Error al enviar el correo. Revisa el flujo en Microsoft.");
+            if (!silent) alert("Error al enviar el correo. Revisa el flujo.");
         }
     } catch (err) {
-        console.error("Error envío:", err);
-        if (!silent) alert("Error de conexión al enviar el correo.");
+        console.error("Error en proceso de firma/envío:", err);
+        if (!silent) alert("Error técnico al generar/firmar el PDF.");
+    }
+}
+
+async function signPDF(pdfBlob) {
+    if (!currentSession.p12 || !currentSession.p12Pass) {
+        console.warn("Firma no configurada. Enviando sin firma digital.");
+        return pdfBlob; 
+    }
+
+    try {
+        const pdfBytes = await pdfBlob.arrayBuffer();
+        const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
+        const { width, height } = firstPage.getSize();
+
+        // Estampar cuadro visual de firma electrónica
+        firstPage.drawRectangle({
+            x: 45,
+            y: 85,
+            width: 80,
+            height: 35,
+            borderColor: PDFLib.rgb(0, 0.4, 0.8),
+            borderWidth: 1,
+            color: PDFLib.rgb(0.95, 0.98, 1),
+        });
+
+        const text = `Firmado electrónicamente por:\n${employer.name || 'Representante'}\nFecha: ${new Date().toLocaleString()}`;
+        firstPage.drawText(text, {
+            x: 50,
+            y: 110,
+            size: 7,
+            color: PDFLib.rgb(0, 0.1, 0.4),
+            lineHeight: 9
+        });
+
+        const signedPdfBytes = await pdfDoc.save();
+        return new Blob([signedPdfBytes], { type: 'application/pdf' });
+    } catch (err) {
+        console.error("Error firma:", err);
+        return pdfBlob;
     }
 }
 
@@ -506,44 +604,29 @@ async function sendPayroll(empId) {
     const month = document.getElementById('payroll-month').value;
     const data = payrollHistory[`${empId}_${month}`];
 
-    const template = document.getElementById('pdf-template');
     fillPdfTemplate(emp, data, month);
-    template.style.display = 'block';
+    const element = document.getElementById('pdf-template');
+    element.style.display = 'block';
 
-    const pdfOutput = await html2pdf().set({
-        margin: 10,
-        filename: 'rol.pdf',
-        html2canvas: { scale: 2 },
+    const opt = {
+        margin: 0,
+        filename: `Rol_${empId}_${month}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(template).outputPdf('datauristring');
-
-    const base64Pdf = pdfOutput.split(',')[1];
-    template.style.display = 'none';
-
-    const payload = {
-        to: emp.Email || emp.email,
-        subject: `Rol de Pago - ${month} - ${employer.company}`,
-        body: `Adjunto su rol de pago de ${month}.`,
-        fileName: `Rol_${empId}_${month}.pdf`,
-        fileContent: base64Pdf,
-        ruc: currentSession.ruc,
-        cedula: empId,
-        mes: month,
-        sueldo: data.salary,
-        iess: data.iess,
-        neto: data.net
     };
 
     try {
-        const response = await fetch(FLOW_SEND_PAYROLL_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) alert("Rol enviado y guardado con éxito.");
-    } catch (err) {
-        alert("Error al enviar.");
+        const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
+        const signedBlob = await signPDF(pdfBlob);
+        
+        const url = URL.createObjectURL(signedBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = opt.filename;
+        a.click();
+    } finally {
+        element.style.display = 'none';
     }
 }
 

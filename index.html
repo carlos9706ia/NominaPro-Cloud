@@ -6,6 +6,9 @@
     <title>Sistema de Roles de Pago - Premium</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Librerías de Firma -->
+    <script src="https://cdn.jsdelivr.net/npm/node-forge@1.0.0/dist/forge.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
@@ -148,7 +151,22 @@
                                 <input type="text" id="company-owner" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        
+                        <div class="form-section" style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                            <h4 style="color: var(--primary); margin-bottom: 1rem;"><i data-lucide="shield-check"></i> Firma Electrónica (.p12)</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Archivo Certificado (.p12)</label>
+                                    <input type="file" id="p12-file" accept=".p12">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contraseña de Firma</label>
+                                    <input type="password" id="p12-password" placeholder="Clave de firma">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Guardar Cambios</button>
                     </form>
                 </div>
             </section>
