@@ -608,16 +608,21 @@ async function sendPayrollEmail(empId, silent = false) {
         const [y, m] = month.split('-');
         const lastDay = new Date(y, m, 0).getDate();
         doc.text(`PERIODO: desde 01/${m}-${y} al ${lastDay}/${m}-${y}`, 15, 62);
-        doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
+        
+        const displayDays = data.days || lastDay;
+        doc.text(`DÍAS TRABAJADOS: ${displayDays}`, 15, 67);
         
         // --- Tabla Ingresos ---
+        const bSalary = data.baseSalary || data.salary || 0;
+        const tIn = data.totalIn || data.total || bSalary;
+
         doc.autoTable({
             startY: 72,
             head: [['DESCRIPCIÓN DE INGRESOS', 'VALOR']],
             body: [
-                ['Sueldo Unificado', (data.baseSalary || 0).toFixed(2)],
+                ['Sueldo Unificado', bSalary.toFixed(2)],
                 ...(data.extrasIn || []).map(x => [x.desc || "Extra", (x.val || 0).toFixed(2)]),
-                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: (data.totalIn || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
+                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: tIn.toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
@@ -625,13 +630,14 @@ async function sendPayrollEmail(empId, silent = false) {
         });
         
         // --- Tabla Egresos ---
+        const tOut = data.totalOut || (data.iess || (bSalary * 0.0945));
         doc.autoTable({
             startY: doc.lastAutoTable.finalY + 10,
             head: [['DESCRIPCIÓN DE DESCUENTOS', 'VALOR']],
             body: [
-                ['Aporte Personal IESS (9.45%)', ((data.baseSalary || 0) * 0.0945).toFixed(2)],
+                ['Aporte Personal IESS (9.45%)', (data.iess || (bSalary * 0.0945)).toFixed(2)],
                 ...(data.extrasOut || []).map(x => [x.desc || "Descuento", (x.val || 0).toFixed(2)]),
-                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: (data.totalOut || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
+                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: tOut.toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
@@ -854,35 +860,38 @@ async function sendPayroll(empId) {
         // --- Datos Empleado ---
         doc.setFontSize(11);
         doc.text("DATOS DEL EMPLEADO", 15, 45);
-        doc.setFontSize(9);
-        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names || emp.Title || ""}`, 15, 52);
-        doc.text(`CÉDULA: ${emp.Cedula || emp.id || emp.Title || ""}`, 15, 57);
         const [y2, m2] = month.split('-');
         const lastDay2 = new Date(y2, m2, 0).getDate();
         doc.text(`PERIODO: desde 01/${m2}-${y2} al ${lastDay2}/${m2}-${y2}`, 15, 62);
-        doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
+        
+        const displayDays2 = data.days || lastDay2;
+        doc.text(`DÍAS TRABAJADOS: ${displayDays2}`, 15, 67);
         
         // --- Tablas ---
+        const bSalary2 = data.baseSalary || data.salary || 0;
+        const tIn2 = data.totalIn || data.total || bSalary2;
+
         doc.autoTable({
             startY: 72,
             head: [['DESCRIPCIÓN DE INGRESOS', 'VALOR']],
             body: [
-                ['Sueldo Unificado', (data.baseSalary || 0).toFixed(2)],
+                ['Sueldo Unificado', bSalary2.toFixed(2)],
                 ...(data.extrasIn || []).map(x => [x.desc || "Extra", (x.val || 0).toFixed(2)]),
-                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: (data.totalIn || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
+                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: tIn2.toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
             margin: { left: 15, right: 15 }
         });
         
+        const tOut2 = data.totalOut || (data.iess || (bSalary2 * 0.0945));
         doc.autoTable({
             startY: doc.lastAutoTable.finalY + 10,
             head: [['DESCRIPCIÓN DE DESCUENTOS', 'VALOR']],
             body: [
-                ['Aporte Personal IESS (9.45%)', ((data.baseSalary || 0) * 0.0945).toFixed(2)],
+                ['Aporte Personal IESS (9.45%)', (data.iess || (bSalary2 * 0.0945)).toFixed(2)],
                 ...(data.extrasOut || []).map(x => [x.desc || "Descuento", (x.val || 0).toFixed(2)]),
-                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: (data.totalOut || 0).toFixed(2), styles: { fontStyle: 'bold' } }]
+                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: tOut2.toFixed(2), styles: { fontStyle: 'bold' } }]
             ],
             theme: 'striped',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
