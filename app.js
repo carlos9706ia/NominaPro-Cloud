@@ -88,24 +88,29 @@ async function handleLogin(e) {
             body: JSON.stringify({ ruc, pin })
         });
 
+        const text = await response.text(); // Leemos como texto primero
         if (response.ok) {
-            const data = await response.json();
-            if (data && data.Title) {
-                currentSession = {
-                    ruc: ruc,
-                    employer: { 
-                        name: data.NombreCEO, 
-                        company: data.NombreEmpresa, 
-                        ruc: data.Title 
-                    }
-                };
-                localStorage.setItem('currentSession', JSON.stringify(currentSession));
-                showApp();
-            } else {
-                alert("RUC o PIN incorrectos.");
+            try {
+                const data = JSON.parse(text);
+                if (data && (data.Title || data.RUC)) {
+                    currentSession = {
+                        ruc: ruc,
+                        employer: { 
+                            name: data.NombreCEO || data.ceo || 'CEO', 
+                            company: data.NombreEmpresa || data.name || 'Empresa', 
+                            ruc: data.Title || data.ruc 
+                        }
+                    };
+                    localStorage.setItem('currentSession', JSON.stringify(currentSession));
+                    showApp();
+                } else {
+                    alert("RUC o PIN incorrectos (No se encontró la empresa en SharePoint).");
+                }
+            } catch (jsonErr) {
+                alert("Microsoft envió una respuesta vacía. Revisa el historial del flujo de Login.");
             }
         } else {
-            alert("Error de Login (Microsoft " + response.status + ").");
+            alert("Error de Microsoft (" + response.status + "): " + text);
         }
     } catch (err) {
         alert("Error de conexión: " + err.message);
@@ -137,7 +142,7 @@ async function handleRegister(e) {
             alert("¡EMPRESA REGISTRADA CON ÉXITO! Ya puedes iniciar sesión.");
             window.closeAllModals();
         } else {
-            alert("Error de Microsoft: " + response.status + ". Revisa si el flujo tiene el paso de 'Respuesta'.");
+            alert("Error de Microsoft: " + response.status);
         }
     } catch (err) {
         alert("Error crítico: " + err.message);
