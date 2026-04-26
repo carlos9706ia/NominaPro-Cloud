@@ -253,8 +253,16 @@
                             <input type="text" id="emp-bank">
                         </div>
                         <div class="form-group">
-                            <label for="emp-account">Número de Cuenta</label>
-                            <input type="text" id="emp-account">
+                            <label for="emp-payment">Forma de Pago</label>
+                            <select id="emp-payment" required>
+                                <option value="Transferencia">Transferencia Bancaria</option>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Cheque">Cheque</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="emp-bank">Banco</label>
+                            <input type="text" id="emp-bank" placeholder="Ej: Pichincha">
                         </div>
                         <div class="form-group">
                             <label for="emp-account-type">Tipo de Cuenta</label>
@@ -263,7 +271,10 @@
                                 <option value="Corriente">Corriente</option>
                             </select>
                         </div>
-                    </div>
+                        <div class="form-group">
+                            <label for="emp-account-number">Número de Cuenta</label>
+                            <input type="text" id="emp-account-number" placeholder="0000000000">
+                        </div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Guardar Empleado</button>
