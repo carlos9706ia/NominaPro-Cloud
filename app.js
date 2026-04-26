@@ -77,6 +77,11 @@ function showApp() {
     const dispCeo = document.getElementById('display-ceo');
     if(dispCeo) dispCeo.textContent = employer.name;
 
+    const avatar = document.getElementById('user-avatar');
+    if(avatar && employer.company) {
+        avatar.textContent = employer.company.charAt(0).toUpperCase();
+    }
+
     loadDataFromMicrosoft();
 }
 
