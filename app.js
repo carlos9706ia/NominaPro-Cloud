@@ -404,13 +404,25 @@ function renderEmployees() {
             <td>${emp.Email || emp.email || '-'}</td>
             <td>${emp.FormaPago || emp.paymentMethod || '-'}</td>
             <td>
-                <button class="action-btn edit" onclick="editEmployee('${id}')"><i data-lucide="edit"></i></button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="action-btn edit" title="Editar" onclick="editEmployee('${id}')"><i data-lucide="edit"></i></button>
+                    <button class="action-btn delete" title="Eliminar" onclick="deleteEmployee('${id}')" style="color: var(--danger);"><i data-lucide="trash-2"></i></button>
+                </div>
             </td>
         `;
         list.appendChild(tr);
     });
     lucide.createIcons();
 }
+
+window.deleteEmployee = (id) => {
+    if (confirm("¿Estás seguro de que deseas eliminar este empleado de la lista?")) {
+        employees = employees.filter(e => (e.Title || e.id) !== id);
+        renderEmployees();
+        renderGeneratorList();
+        renderDashboard();
+    }
+};
 
 window.editEmployee = (id) => {
     const emp = employees.find(e => (e.Title || e.id) === id);
