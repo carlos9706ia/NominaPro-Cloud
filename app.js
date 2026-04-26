@@ -549,35 +549,84 @@ async function sendPayrollEmail(empId, silent = false) {
     }
 
     try {
-        // 1. Generar Clon del Rol para captura segura
-        fillPdfTemplate(emp, data, month);
-        const original = document.getElementById('pdf-template');
-        const clone = original.cloneNode(true);
+        // 1. Generar PDF NATIVO (Texto Real + Vectores)
+        const doc = new jspdf.jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
         
-        // Estilos para el clon (Invisible pero procesable)
-        clone.style.position = 'absolute';
-        clone.style.left = '-9999px';
-        clone.style.top = '0';
-        clone.style.display = 'block';
-        clone.style.width = '210mm'; // Ancho A4
-        document.body.appendChild(clone);
-
-        const opt = {
-            margin: 0,
-            filename: `Rol_${empId}_${month}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                logging: false, 
-                backgroundColor: '#ffffff',
-                letterRendering: true // Mejora el renderizado de texto real
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-        };
-
-        const pdfBlob = await html2pdf().from(clone).set(opt).output('blob');
-        document.body.removeChild(clone); // Limpiamos el clon
+        // --- Encabezado ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(employer.name || "EMPRESA", 15, 20);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(`RUC: ${employer.ruc || ""}`, 15, 26);
+        doc.text(`REPRESENTANTE: ${employer.company || ""}`, 15, 31);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("ROL DE PAGO INDIVIDUAL", pageWidth - 15, 20, { align: "right" });
+        doc.setFontSize(12);
+        doc.text(`MES DE ${month}`, pageWidth - 15, 26, { align: "right" });
+        
+        doc.setLineWidth(0.5);
+        doc.line(15, 36, pageWidth - 15, 36);
+        
+        // --- Datos Empleado ---
+        doc.setFontSize(11);
+        doc.text("DATOS DEL EMPLEADO", 15, 45);
+        doc.setFontSize(9);
+        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names}`, 15, 52);
+        doc.text(`CÉDULA: ${emp.Cedula || emp.id}`, 15, 57);
+        doc.text(`PERIODO: desde 01/${month} al 30/${month}`, 15, 62);
+        doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
+        
+        // --- Tabla Ingresos ---
+        doc.autoTable({
+            startY: 72,
+            head: [['DESCRIPCIÓN DE INGRESOS', 'VALOR']],
+            body: [
+                ['Sueldo Unificado', data.baseSalary.toFixed(2)],
+                ...(data.extrasIn || []).map(x => [x.desc, x.val.toFixed(2)]),
+                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: data.totalIn.toFixed(2), styles: { fontStyle: 'bold' } }]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+            margin: { left: 15, right: 15 }
+        });
+        
+        // --- Tabla Egresos ---
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 10,
+            head: [['DESCRIPCIÓN DE DESCUENTOS', 'VALOR']],
+            body: [
+                ['Aporte Personal IESS (9.45%)', (data.baseSalary * 0.0945).toFixed(2)],
+                ...(data.extrasOut || []).map(x => [x.desc, x.val.toFixed(2)]),
+                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: data.totalOut.toFixed(2), styles: { fontStyle: 'bold' } }]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+            margin: { left: 15, right: 15 }
+        });
+        
+        // --- Totales Finales ---
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.text("NETO A RECIBIR", 15, finalY);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text(`$${data.net.toFixed(2)}`, 15, finalY + 8);
+        
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text(`FORMA DE PAGO: ${emp.MetodoPago || "TRANSFERENCIA"}`, 15, finalY + 15);
+        doc.text(`BANCO/CUENTA: ${emp.Banco || ""} | ${emp.TipoCuenta || ""} | ${emp.NumeroCuenta || ""}`, 15, finalY + 20);
+        
+        // --- Firmas ---
+        doc.text("Firma del Empleador", 15, finalY + 30);
+        doc.text("Firma del Empleado", 15, finalY + 35);
+        
+        const pdfBlob = doc.output('blob');
 
         // 2. Firmar el PDF (Con protección)
         let finalPdfBlob = pdfBlob;
@@ -741,28 +790,79 @@ async function sendPayroll(empId) {
     const month = document.getElementById('payroll-month').value;
     const data = payrollHistory[`${empId}_${month}`];
 
-    fillPdfTemplate(emp, data, month);
-    const modal = document.getElementById('pdf-template');
-    const element = document.getElementById('pdf-content-to-capture');
-    
-    // Lo mostramos de forma INVISIBLE para el usuario
-    modal.style.display = 'block';
-    modal.style.opacity = '0.01';
-    modal.style.zIndex = '-1000';
-
-    await new Promise(r => setTimeout(r, 600));
-
-    const opt = {
-        margin: 0,
-        filename: `Rol_${empId}_${month}.pdf`,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 1.5, useCORS: true, logging: false, height: 1120, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-        pagebreak: { mode: 'avoid-all' }
-    };
-
     try {
-        const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
+        // Generar PDF NATIVO (Texto Real + Vectores)
+        const doc = new jspdf.jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(employer.name || "EMPRESA", 15, 20);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(`RUC: ${employer.ruc || ""}`, 15, 26);
+        doc.text(`REPRESENTANTE: ${employer.company || ""}`, 15, 31);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("ROL DE PAGO INDIVIDUAL", pageWidth - 15, 20, { align: "right" });
+        doc.setFontSize(12);
+        doc.text(`MES DE ${month}`, pageWidth - 15, 26, { align: "right" });
+        
+        doc.setLineWidth(0.5);
+        doc.line(15, 36, pageWidth - 15, 36);
+        
+        doc.setFontSize(11);
+        doc.text("DATOS DEL EMPLEADO", 15, 45);
+        doc.setFontSize(9);
+        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names}`, 15, 52);
+        doc.text(`CÉDULA: ${emp.Cedula || emp.id}`, 15, 57);
+        doc.text(`PERIODO: desde 01/${month} al 30/${month}`, 15, 62);
+        doc.text(`DÍAS TRABAJADOS: ${data.days || 30}`, 15, 67);
+        
+        doc.autoTable({
+            startY: 72,
+            head: [['DESCRIPCIÓN DE INGRESOS', 'VALOR']],
+            body: [
+                ['Sueldo Unificado', data.baseSalary.toFixed(2)],
+                ...(data.extrasIn || []).map(x => [x.desc, x.val.toFixed(2)]),
+                [{ content: 'TOTAL INGRESOS', styles: { fontStyle: 'bold' } }, { content: data.totalIn.toFixed(2), styles: { fontStyle: 'bold' } }]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+            margin: { left: 15, right: 15 }
+        });
+        
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 10,
+            head: [['DESCRIPCIÓN DE DESCUENTOS', 'VALOR']],
+            body: [
+                ['Aporte Personal IESS (9.45%)', (data.baseSalary * 0.0945).toFixed(2)],
+                ...(data.extrasOut || []).map(x => [x.desc, x.val.toFixed(2)]),
+                [{ content: 'TOTAL DESCUENTOS', styles: { fontStyle: 'bold' } }, { content: data.totalOut.toFixed(2), styles: { fontStyle: 'bold' } }]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+            margin: { left: 15, right: 15 }
+        });
+        
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.text("NETO A RECIBIR", 15, finalY);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text(`$${data.net.toFixed(2)}`, 15, finalY + 8);
+        
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text(`FORMA DE PAGO: ${emp.MetodoPago || "TRANSFERENCIA"}`, 15, finalY + 15);
+        doc.text(`BANCO/CUENTA: ${emp.Banco || ""} | ${emp.TipoCuenta || ""} | ${emp.NumeroCuenta || ""}`, 15, finalY + 20);
+        
+        doc.text("Firma del Empleador", 15, finalY + 30);
+        doc.text("Firma del Empleado", 15, finalY + 35);
+        
+        const pdfBlob = doc.output('blob');
         
         let finalPdfBlob = pdfBlob;
         try {
