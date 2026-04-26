@@ -531,18 +531,20 @@ function handlePayrollSubmit(e) {
 
     const days = parseInt(document.getElementById('payroll-days').value) || 30;
 
-    payrollHistory[`${empId}_${month}`] = {
-        baseSalary,
-        totalIn,
-        totalOut,
-        net,
-        iess,
-        extrasIn,
-        extrasOut,
-        days
+    const payrollData = {
+        baseSalary, totalIn, totalOut, net, iess, extrasIn, extrasOut, days,
+        updatedAt: new Date().toISOString()
     };
 
-    // Guardar en localStorage para persistencia
+    // Triple blindaje: Guardar bajo todas las identidades posibles
+    const emp = employees.find(e => (e.Title || e.id || e.NombreCompleto || e.names || e.Cedula) === empId);
+    if (emp) {
+        [emp.Title, emp.id, emp.Cedula, emp.NombreCompleto, emp.names].filter(Boolean).forEach(id => {
+            payrollHistory[`${id}_${month}`] = payrollData;
+        });
+    } else {
+        payrollHistory[`${empId}_${month}`] = payrollData;
+    }
     localStorage.setItem('payrollHistory', JSON.stringify(payrollHistory));
 
     window.closeAllModals();
