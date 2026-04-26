@@ -563,9 +563,9 @@ async function sendPayrollEmail(empId, silent = false) {
 
         const opt = {
             margin: 0,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 1.5, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
         };
 
         const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
@@ -593,20 +593,15 @@ async function sendPayrollEmail(empId, silent = false) {
         // 4. Enviar a Power Automate
         const payload = {
             empId: empId,
-            email: email, // Minúscula
-            Email: email, // Mayúscula (Común en SharePoint)
-            Correo: email,
-            destinatario: email,
-            names: emp.NombreCompleto || emp.names || emp.Title || "Empleado",
-            Nombre: emp.NombreCompleto || emp.names || emp.Title || "Empleado",
-            subject: `Rol de Pago - ${month} - ${emp.NombreCompleto || emp.names || "Empleado"}`,
+            email: email,
+            names: emp.NombreCompleto || emp.names || "Empleado",
             month: month,
-            fileContent: base64Pdf,
+            ruc: currentSession.ruc,
             fileName: `Rol_${empId}_${month}.pdf`,
-            ruc: currentSession.ruc
+            fileContent: base64Pdf // Siempre al final para evitar errores de lectura
         };
 
-        console.log("Enviando a Microsoft Payload:", { ...payload, fileContent: "(Base64...)" });
+        console.log("Enviando a Microsoft (Optimizado)...");
 
         const response = await fetch(FLOW_SEND_PAYROLL_URL, {
             method: 'POST',
@@ -749,8 +744,8 @@ async function sendPayroll(empId) {
     const opt = {
         margin: 0,
         filename: `Rol_${empId}_${month}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, height: 1120 },
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 1.5, useCORS: true, logging: false, height: 1120 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
         pagebreak: { mode: 'avoid-all' }
     };
