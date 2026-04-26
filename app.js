@@ -547,14 +547,19 @@ async function sendPayrollEmail(empId, silent = false) {
         element.style.left = '0'; // Reset para previsualización normal
         element.style.position = 'fixed';
 
-        // 2. Firmar el PDF
-        const signedPdfBlob = await signPDF(pdfBlob);
+        // 2. Firmar el PDF (Con protección)
+        let finalPdfBlob = pdfBlob;
+        try {
+            finalPdfBlob = await signPDF(pdfBlob);
+        } catch (e) {
+            console.warn("Firma falló, enviando original:", e);
+        }
         
         // 3. Convertir a Base64 para enviar
         const reader = new FileReader();
         const base64Pdf = await new Promise(resolve => {
             reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.readAsDataURL(signedPdfBlob);
+            reader.readAsDataURL(finalPdfBlob);
         });
 
         // 4. Enviar a Power Automate
@@ -575,36 +580,36 @@ async function sendPayrollEmail(empId, silent = false) {
         if (response.ok) {
             if (!silent) alert(`✅ Rol firmado y enviado con éxito a ${emp.Email || emp.email}`);
         } else {
-            if (!silent) alert("Error al enviar el correo. Revisa el flujo.");
+            const errText = await response.text();
+            console.error("Error Flow:", errText);
+            if (!silent) alert(`❌ Error de Microsoft (${response.status}): El correo no se envió.`);
         }
     } catch (err) {
-        console.error("Error en proceso de firma/envío:", err);
-        if (!silent) alert("Error técnico al generar/firmar el PDF.");
+        console.error("Error crítico en proceso:", err);
+        if (!silent) alert("❌ Error crítico: No se pudo generar o enviar el PDF. Revisa tu conexión.");
     }
 }
 
 async function signPDF(pdfBlob) {
-    if (!currentSession.p12 || !currentSession.p12Pass) {
-        console.warn("Firma no configurada. Enviando sin firma digital.");
-        return pdfBlob; 
-    }
+    if (!currentSession.p12 || !currentSession.p12Pass) return pdfBlob;
 
     try {
         const pdfBytes = await pdfBlob.arrayBuffer();
-        const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+        // Usar la librería global PDFLib de forma segura
+        const { PDFDocument, rgb } = PDFLib;
+        const pdfDoc = await PDFDocument.load(pdfBytes);
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
-        const { width, height } = firstPage.getSize();
 
         // Estampar cuadro visual de firma electrónica
         firstPage.drawRectangle({
             x: 45,
             y: 85,
-            width: 80,
+            width: 85,
             height: 35,
-            borderColor: PDFLib.rgb(0, 0.4, 0.8),
+            borderColor: rgb(0, 0.4, 0.8),
             borderWidth: 1,
-            color: PDFLib.rgb(0.95, 0.98, 1),
+            color: rgb(0.95, 0.98, 1),
         });
 
         const text = `Firmado electrónicamente por:\n${employer.name || 'Representante'}\nFecha: ${new Date().toLocaleString()}`;
@@ -612,15 +617,15 @@ async function signPDF(pdfBlob) {
             x: 50,
             y: 110,
             size: 7,
-            color: PDFLib.rgb(0, 0.1, 0.4),
+            color: rgb(0, 0.1, 0.4),
             lineHeight: 9
         });
 
         const signedPdfBytes = await pdfDoc.save();
         return new Blob([signedPdfBytes], { type: 'application/pdf' });
     } catch (err) {
-        console.error("Error firma:", err);
-        return pdfBlob;
+        console.error("Error firma digital:", err);
+        throw err;
     }
 }
 
@@ -662,12 +667,13 @@ async function sendPayroll(empId) {
     const data = payrollHistory[`${empId}_${month}`];
 
     fillPdfTemplate(emp, data, month);
-    const element = document.getElementById('pdf-template');
+    const modal = document.getElementById('pdf-template');
+    const element = document.getElementById('pdf-content-to-capture');
     
-    element.style.display = 'block';
-    element.style.left = '0';
+    modal.style.display = 'block';
+    modal.style.opacity = '1';
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 600));
 
     const opt = {
         margin: 0,
@@ -679,15 +685,24 @@ async function sendPayroll(empId) {
 
     try {
         const pdfBlob = await html2pdf().from(element).set(opt).output('blob');
-        const signedBlob = await signPDF(pdfBlob);
         
-        const url = URL.createObjectURL(signedBlob);
+        let finalPdfBlob = pdfBlob;
+        try {
+            finalPdfBlob = await signPDF(pdfBlob);
+        } catch (e) {
+            console.warn("Firma falló, descargando original.");
+        }
+        
+        const url = URL.createObjectURL(finalPdfBlob);
         const a = document.createElement('a');
         a.href = url;
         a.download = opt.filename;
         a.click();
+    } catch (err) {
+        console.error("Error descarga:", err);
+        alert("Error al generar el PDF.");
     } finally {
-        element.style.display = 'none';
+        modal.style.display = 'none';
     }
 }
 
