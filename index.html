@@ -319,8 +319,9 @@
             </form>
         </div>
     </div>
-    <div id="pdf-template" style="display: none;">
-        <div class="pdf-container">
+    <div id="pdf-template" style="display: none;" onclick="this.style.display='none'">
+        <div style="position: fixed; top: 20px; right: 20px; color: white; cursor: pointer; font-size: 2rem;">&times;</div>
+        <div class="pdf-container" onclick="event.stopPropagation()">
             <div class="pdf-header">
                 <div class="company-info pdf-company-info">
                     <h1 id="pdf-company-name">NOMBRE EMPRESA</h1>
