@@ -70,8 +70,13 @@ function showApp() {
     document.getElementById('login-overlay').style.display = 'none';
     document.querySelector('.app-container').style.display = 'flex';
     employer = currentSession.employer;
-    const disp = document.getElementById('display-company');
-    if(disp) disp.textContent = employer.company;
+    
+    const dispCompany = document.getElementById('display-company');
+    if(dispCompany) dispCompany.textContent = employer.company;
+    
+    const dispCeo = document.getElementById('display-ceo');
+    if(dispCeo) dispCeo.textContent = employer.name;
+
     loadDataFromMicrosoft();
 }
 
