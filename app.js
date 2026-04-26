@@ -15,6 +15,7 @@ let employer = { name: '', company: '', ruc: '' };
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     initDate();
+    initEventListeners();
     
     if (currentSession) {
         showApp();
@@ -22,6 +23,42 @@ document.addEventListener('DOMContentLoaded', () => {
         showLogin();
     }
 });
+
+function initEventListeners() {
+    // Login Form
+    document.getElementById('login-form').addEventListener('submit', handleLogin);
+    
+    // Register Form
+    document.getElementById('register-form').addEventListener('submit', handleRegister);
+    
+    // Toggle Register Modal
+    document.getElementById('show-register').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('register-modal').classList.add('active');
+    });
+
+    // Close Modals
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        });
+    });
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sectionId = item.getAttribute('data-section');
+            if (sectionId) switchSection(sectionId, item);
+        });
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', logout);
+
+    // Generator Month Change
+    document.getElementById('payroll-month').addEventListener('change', renderGeneratorList);
+}
 
 function showLogin() {
     document.getElementById('login-overlay').style.display = 'flex';
@@ -33,12 +70,12 @@ function showApp() {
     document.querySelector('.app-container').style.display = 'flex';
     
     employer = currentSession.employer;
-    loadEmployerData();
+    document.getElementById('display-company').textContent = employer.company;
     loadDataFromMicrosoft();
 }
 
-// --- Login & Register ---
-document.getElementById('login-form').addEventListener('submit', async (e) => {
+// --- Auth Handlers ---
+async function handleLogin(e) {
     e.preventDefault();
     const ruc = document.getElementById('login-ruc').value;
     const pin = document.getElementById('login-pin').value;
@@ -64,15 +101,15 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
                 localStorage.setItem('currentSession', JSON.stringify(currentSession));
                 showApp();
             } else {
-                alert("Credenciales incorrectas.");
+                alert("RUC o PIN incorrectos.");
             }
         }
     } catch (err) {
         alert("Error de conexión con Microsoft.");
     }
-});
+}
 
-document.getElementById('register-form').addEventListener('submit', async (e) => {
+async function handleRegister(e) {
     e.preventDefault();
     const payload = {
         ruc: document.getElementById('reg-ruc').value,
@@ -95,9 +132,9 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
     } catch (err) {
         alert("Error al registrar.");
     }
-});
+}
 
-// --- Data Management ---
+// --- Data Fetching ---
 async function loadDataFromMicrosoft() {
     try {
         const response = await fetch(FLOW_FETCH_DATA_URL, {
@@ -109,7 +146,6 @@ async function loadDataFromMicrosoft() {
         const data = await response.json();
         employees = data.empleados || [];
         
-        // Transformar roles a formato local
         payrollHistory = {};
         if (data.roles) {
             data.roles.forEach(role => {
@@ -118,7 +154,7 @@ async function loadDataFromMicrosoft() {
                     salary: role.Sueldo,
                     iess: role.IESS,
                     net: role.Neto,
-                    deductions: [] // Se pueden expandir después
+                    deductions: []
                 };
             });
         }
@@ -130,18 +166,40 @@ async function loadDataFromMicrosoft() {
     }
 }
 
+function switchSection(sectionId, navItem) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    navItem.classList.add('active');
+    
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(sectionId).classList.add('active');
+    
+    document.getElementById('section-title').textContent = navItem.querySelector('span').textContent;
+
+    if (sectionId === 'generator') renderGeneratorList();
+    if (sectionId === 'dashboard') renderDashboard();
+}
+
+function logout(e) {
+    e.preventDefault();
+    if (confirm('¿Cerrar sesión?')) {
+        localStorage.removeItem('currentSession');
+        location.reload();
+    }
+}
+
+// --- UI Rendering ---
 function renderEmployees() {
     const list = document.getElementById('employees-table-body');
     list.innerHTML = '';
     employees.forEach((emp, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${emp.NombreCompleto || emp.names}</td>
+            <td>${emp.NombreCompleto || emp.names || 'N/A'}</td>
             <td>${emp.Title || emp.id}</td>
-            <td>${emp.Email || emp.email}</td>
-            <td>${emp.FormaPago || emp.paymentMethod}</td>
+            <td>${emp.Email || emp.email || '-'}</td>
+            <td>${emp.FormaPago || emp.paymentMethod || '-'}</td>
             <td>
-                <button class="btn-icon" onclick="editEmployee(${index})"><i data-lucide="edit"></i></button>
+                <button class="action-btn edit" onclick="alert('Función en desarrollo')"><i data-lucide="edit"></i></button>
             </td>
         `;
         list.appendChild(tr);
@@ -149,7 +207,6 @@ function renderEmployees() {
     lucide.createIcons();
 }
 
-// --- Payroll Logic ---
 function renderGeneratorList() {
     const list = document.getElementById('generator-list');
     const month = document.getElementById('payroll-month').value;
@@ -170,10 +227,10 @@ function renderGeneratorList() {
             <td>$${config.iess.toFixed(2)}</td>
             <td><strong>$${config.net.toFixed(2)}</strong></td>
             <td>
-                <button class="btn-icon" onclick="openPayrollConfig('${id}')"><i data-lucide="settings"></i></button>
+                <button class="action-btn config" onclick="openPayrollConfig('${id}')"><i data-lucide="settings"></i></button>
             </td>
             <td>
-                <button class="btn-icon" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''}><i data-lucide="mail"></i></button>
+                <button class="action-btn" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''}><i data-lucide="mail"></i></button>
             </td>
         `;
         list.appendChild(tr);
@@ -181,12 +238,24 @@ function renderGeneratorList() {
     lucide.createIcons();
 }
 
+// --- Payroll Config & PDF ---
+window.openPayrollConfig = (empId) => {
+    const salary = prompt("Ingrese el Sueldo Base:", "460");
+    if (salary) {
+        const s = parseFloat(salary);
+        const iess = s * 0.0945;
+        const net = s - iess;
+        const month = document.getElementById('payroll-month').value;
+        payrollHistory[`${empId}_${month}`] = { salary: s, iess: iess, net: net };
+        renderGeneratorList();
+    }
+};
+
 async function sendPayroll(empId) {
     const emp = employees.find(e => (e.Title || e.id) === empId);
     const month = document.getElementById('payroll-month').value;
     const data = payrollHistory[`${empId}_${month}`];
 
-    // 1. Generar PDF
     const template = document.getElementById('pdf-template');
     fillPdfTemplate(emp, data, month);
     template.style.display = 'block';
@@ -201,7 +270,6 @@ async function sendPayroll(empId) {
     const base64Pdf = pdfOutput.split(',')[1];
     template.style.display = 'none';
 
-    // 2. Enviar a Microsoft
     const payload = {
         to: emp.Email || emp.email,
         subject: `Rol de Pago - ${month} - ${employer.company}`,
@@ -243,41 +311,10 @@ function fillPdfTemplate(emp, data, month) {
     document.getElementById('pdf-net-pay').textContent = `$${data.net.toFixed(2)}`;
 }
 
-// --- Helpers ---
-function initDate() {
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
-}
-
-function loadEmployerData() {
-    document.getElementById('display-company').textContent = employer.company;
-}
-
-// Configuración de nómina por empleado
-window.openPayrollConfig = (empId) => {
-    const salary = prompt("Ingrese el Sueldo Base:", "460");
-    if (salary) {
-        const s = parseFloat(salary);
-        const iess = s * 0.0945;
-        const net = s - iess;
-        const month = document.getElementById('payroll-month').value;
-        payrollHistory[`${empId}_${month}`] = { salary: s, iess: iess, net: net };
-        renderGeneratorList();
-    }
-};
-
-// UI Toggles
-document.getElementById('show-register').addEventListener('click', () => {
-    document.getElementById('register-modal').classList.add('active');
-});
-
-document.querySelectorAll('.close-modal').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-    });
-});
-
-document.getElementById('payroll-month').addEventListener('change', renderGeneratorList);
-
 function renderDashboard() {
     document.getElementById('stat-employees').textContent = employees.length;
+}
+
+function initDate() {
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
 }
