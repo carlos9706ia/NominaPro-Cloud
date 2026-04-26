@@ -1,3 +1,15 @@
+// --- Funciones de Emergencia (Globales) ---
+window.openRegisterModal = (e) => {
+    if(e) e.preventDefault();
+    console.log("Activando modal desde HTML");
+    const modal = document.getElementById('register-modal');
+    if(modal) modal.style.display = 'flex';
+};
+
+window.closeAllModals = () => {
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+};
+
 // --- Configuration (URLs de Power Automate) ---
 const FLOW_REGISTER_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1e58f2780ef449dfbd9e99214777d549/triggers/manual/paths/invoke?api-version=1";
 const FLOW_LOGIN_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3c6016458c2843afb5091b6e1b0db33e/triggers/manual/paths/invoke?api-version=1";
@@ -13,7 +25,6 @@ let employer = { name: '', company: '', ruc: '' };
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Aplicación Iniciada");
     lucide.createIcons();
     initDate();
     initEventListeners();
@@ -26,36 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initEventListeners() {
-    console.log("Cargando eventos...");
-    
-    // Login Form
+    // Formulario de Login
     const loginForm = document.getElementById('login-form');
     if(loginForm) loginForm.addEventListener('submit', handleLogin);
     
-    // Register Form
+    // Formulario de Registro
     const registerForm = document.getElementById('register-form');
     if(registerForm) registerForm.addEventListener('submit', handleRegister);
-    
-    // Toggle Register Modal (FORZADO)
-    const showRegBtn = document.getElementById('show-register');
-    if(showRegBtn) {
-        showRegBtn.onclick = (e) => {
-            e.preventDefault();
-            console.log("Abriendo modal de registro");
-            const modal = document.getElementById('register-modal');
-            if(modal) modal.style.display = 'flex';
-            else alert("Error: No se encuentra el modal de registro");
-        };
-    }
 
-    // Close Modals (FORZADO)
+    // Cerrar Modals (Botones X)
     document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        };
+        btn.onclick = window.closeAllModals;
     });
 
-    // Navigation
+    // Navegación Sidebar
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -68,7 +63,7 @@ function initEventListeners() {
     const logoutBtn = document.getElementById('logout-btn');
     if(logoutBtn) logoutBtn.addEventListener('click', logout);
 
-    // Generator Month Change
+    // Cambio de Mes en Generador
     const monthInput = document.getElementById('payroll-month');
     if(monthInput) monthInput.addEventListener('change', renderGeneratorList);
 }
@@ -83,7 +78,8 @@ function showApp() {
     document.querySelector('.app-container').style.display = 'flex';
     
     employer = currentSession.employer;
-    document.getElementById('display-company').textContent = employer.company;
+    const dispCompany = document.getElementById('display-company');
+    if(dispCompany) dispCompany.textContent = employer.company;
     loadDataFromMicrosoft();
 }
 
@@ -124,7 +120,6 @@ async function handleLogin(e) {
 
 async function handleRegister(e) {
     e.preventDefault();
-    console.log("Enviando registro a Microsoft...");
     const payload = {
         ruc: document.getElementById('reg-ruc').value,
         name: document.getElementById('reg-company').value,
@@ -140,17 +135,15 @@ async function handleRegister(e) {
         });
 
         if (response.ok) {
-            alert("¡Empresa registrada con éxito! Ya puedes iniciar sesión.");
-            document.getElementById('register-modal').style.display = 'none';
-        } else {
-            alert("Error en el servidor de Microsoft.");
+            alert("¡Empresa registrada con éxito!");
+            window.closeAllModals();
         }
     } catch (err) {
-        alert("Error al registrar: " + err.message);
+        alert("Error al registrar.");
     }
 }
 
-// --- Data Fetching ---
+// --- Data & Rendering ---
 async function loadDataFromMicrosoft() {
     try {
         const response = await fetch(FLOW_FETCH_DATA_URL, {
@@ -185,11 +178,12 @@ async function loadDataFromMicrosoft() {
 function switchSection(sectionId, navItem) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     navItem.classList.add('active');
-    
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(sectionId).classList.add('active');
+    const section = document.getElementById(sectionId);
+    if(section) section.classList.add('active');
     
-    document.getElementById('section-title').textContent = navItem.querySelector('span').textContent;
+    const title = document.getElementById('section-title');
+    if(title) title.textContent = navItem.querySelector('span').textContent;
 
     if (sectionId === 'generator') renderGeneratorList();
     if (sectionId === 'dashboard') renderDashboard();
@@ -203,7 +197,6 @@ function logout(e) {
     }
 }
 
-// --- UI Rendering ---
 function renderEmployees() {
     const list = document.getElementById('employees-table-body');
     if(!list) return;
