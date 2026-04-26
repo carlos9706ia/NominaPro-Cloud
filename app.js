@@ -563,8 +563,8 @@ async function sendPayrollEmail(empId, silent = false) {
 
         const opt = {
             margin: 0,
-            image: { type: 'jpeg', quality: 0.8 },
-            html2canvas: { scale: 1.2, useCORS: true, logging: false },
+            image: { type: 'jpeg', quality: 0.75 },
+            html2canvas: { scale: 1.0, useCORS: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
         };
 
@@ -592,8 +592,10 @@ async function sendPayrollEmail(empId, silent = false) {
 
         // 4. Enviar a Power Automate
         const payload = {
+            Email: email, // Primero y con Mayúscula (Estándar Microsoft)
             email: email,
-            Email: email,
+            subject: `Rol de Pago - ${month} - ${emp.NombreCompleto || "Empleado"}`,
+            body: `Se adjunta el rol de pago correspondiente al mes de ${month}.`,
             names: emp.NombreCompleto || emp.names || "Empleado",
             month: month,
             ruc: currentSession.ruc,
@@ -602,7 +604,7 @@ async function sendPayrollEmail(empId, silent = false) {
             fileContent: base64Pdf
         };
 
-        console.log("🚀 Enviando Payload Blindado...");
+        console.log("🚀 Enviando Payload Ultra-Compatible...");
 
         const response = await fetch(FLOW_SEND_PAYROLL_URL, {
             method: 'POST',
@@ -745,8 +747,8 @@ async function sendPayroll(empId) {
     const opt = {
         margin: 0,
         filename: `Rol_${empId}_${month}.pdf`,
-        image: { type: 'jpeg', quality: 0.8 },
-        html2canvas: { scale: 1.2, useCORS: true, logging: false, height: 1120 },
+        image: { type: 'jpeg', quality: 0.75 },
+        html2canvas: { scale: 1.0, useCORS: true, logging: false, height: 1120 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
         pagebreak: { mode: 'avoid-all' }
     };
