@@ -317,6 +317,23 @@ function renderEmployees() {
     lucide.createIcons();
 }
 
+window.editEmployee = (id) => {
+    const emp = employees.find(e => (e.Title || e.id) === id);
+    if (!emp) return;
+
+    document.getElementById('modal-title').textContent = "Editar Empleado";
+    document.getElementById('edit-index').value = id;
+    document.getElementById('emp-names').value = emp.NombreCompleto || emp.names || '';
+    document.getElementById('emp-id').value = id;
+    document.getElementById('emp-email').value = emp.Email || emp.email || '';
+    document.getElementById('emp-payment').value = emp.FormaPago || emp.paymentMethod || 'Efectivo';
+    document.getElementById('emp-bank').value = emp.Banco || emp.bank || '';
+    document.getElementById('emp-account-type').value = emp.TipoCuenta || emp.accountType || 'Ahorros';
+    document.getElementById('emp-account-number').value = emp.Cuenta || emp.account || '';
+    
+    window.openEmployeeModal();
+};
+
 function renderGeneratorList() {
     const list = document.getElementById('generator-list');
     if (!list) return;
