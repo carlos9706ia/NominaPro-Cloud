@@ -593,15 +593,20 @@ async function sendPayrollEmail(empId, silent = false) {
         // 4. Enviar a Power Automate
         const payload = {
             empId: empId,
-            email: email, // Usamos la variable validada
+            email: email, // Minúscula
+            Email: email, // Mayúscula (Común en SharePoint)
+            Correo: email,
+            destinatario: email,
             names: emp.NombreCompleto || emp.names || emp.Title || "Empleado",
+            Nombre: emp.NombreCompleto || emp.names || emp.Title || "Empleado",
+            subject: `Rol de Pago - ${month} - ${emp.NombreCompleto || emp.names || "Empleado"}`,
             month: month,
             fileContent: base64Pdf,
             fileName: `Rol_${empId}_${month}.pdf`,
             ruc: currentSession.ruc
         };
 
-        console.log("Enviando a Microsoft:", { ...payload, fileContent: "(Base64...)" });
+        console.log("Enviando a Microsoft Payload:", { ...payload, fileContent: "(Base64...)" });
 
         const response = await fetch(FLOW_SEND_PAYROLL_URL, {
             method: 'POST',
