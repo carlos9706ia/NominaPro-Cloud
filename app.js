@@ -426,9 +426,9 @@ function renderGeneratorList() {
     if (!month) return;
 
     employees.forEach((emp) => {
-        const id = emp.Title || emp.id;
-        const key = `${id}_${month}`;
-        const config = payrollHistory[key] || { baseSalary: 0, iess: 0, net: 0 };
+        const id = emp.Title || emp.id || emp.Cedula || emp.NombreCompleto;
+        const data = getEmployeeData(emp, month);
+        const config = data || { baseSalary: 0, iess: 0, net: 0 };
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -450,7 +450,24 @@ function renderGeneratorList() {
         `;
         list.appendChild(tr);
     });
-    lucide.createIcons();
+}
+
+// Función auxiliar para búsqueda robusta
+function getEmployeeData(emp, month) {
+    if (!emp) return null;
+    const searchIds = [
+        emp.Title,
+        emp.id,
+        emp.Cedula,
+        emp.NombreCompleto,
+        emp.names
+    ].filter(Boolean);
+
+    for (const id of searchIds) {
+        const key = `${id}_${month}`;
+        if (payrollHistory[key]) return payrollHistory[key];
+    }
+    return null;
 }
 
 window.openPayrollConfig = (empId) => {
@@ -458,10 +475,20 @@ window.openPayrollConfig = (empId) => {
     if (!emp) return;
 
     document.getElementById('payroll-emp-id-hidden').value = empId;
-    document.getElementById('payroll-emp-name').textContent = emp.NombreCompleto || emp.names;
-    document.getElementById('payroll-emp-id-display').textContent = "ID: " + (emp.Title || emp.id);
+    document.getElementById('payroll-emp-name').textContent = emp.NombreCompleto || emp.names || emp.Title;
+    document.getElementById('payroll-emp-id-display').textContent = "ID: " + empId;
     document.getElementById('income-list').innerHTML = '';
     document.getElementById('deduction-list').innerHTML = '';
+
+    // Pre-cargar datos si existen
+    const month = document.getElementById('payroll-month').value;
+    const existing = getEmployeeData(emp, month);
+    if (existing) {
+        document.getElementById('base-salary').value = existing.baseSalary || existing.salary || 460;
+        document.getElementById('payroll-days').value = existing.days || 30;
+        
+        // Re-generar filas de extras si es necesario (Opcional, por ahora limpiamos)
+    }
 
     const modal = document.getElementById('payroll-modal');
     
@@ -557,9 +584,9 @@ async function handleBulkGenerate() {
 }
 
 async function sendPayrollEmail(empId, silent = false) {
-    const emp = employees.find(e => (e.Title || e.id) === empId);
+    const emp = employees.find(e => (e.Title || e.id || e.NombreCompleto) === empId);
     const month = document.getElementById('payroll-month').value;
-    const data = payrollHistory[`${empId}_${month}`];
+    const data = getEmployeeData(emp, month);
 
     if (!data || (typeof data.baseSalary === 'undefined' && typeof data.salary === 'undefined')) {
         if (!silent) alert("❌ Primero configura el sueldo del empleado para este mes.");
@@ -821,9 +848,9 @@ async function initDate() {
 }
 
 async function sendPayroll(empId) {
-    const emp = employees.find(e => (e.Title || e.id) === empId);
+    const emp = employees.find(e => (e.Title || e.id || e.NombreCompleto) === empId);
     const month = document.getElementById('payroll-month').value;
-    const data = payrollHistory[`${empId}_${month}`];
+    const data = getEmployeeData(emp, month);
 
     if (!data || (typeof data.baseSalary === 'undefined' && typeof data.salary === 'undefined')) {
         alert("❌ Primero configura el sueldo del empleado para este mes.");
