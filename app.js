@@ -9,12 +9,12 @@ window.closeAllModals = () => {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 };
 
-// --- Configuration ---
-const FLOW_REGISTER_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9ccaf784e77a414ab9b032ae8ad7d450/triggers/manual/paths/invoke?api-version=1";
-const FLOW_LOGIN_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3c6016458c2843afb5091b6e1b0db33e/triggers/manual/paths/invoke?api-version=1";
-const FLOW_FETCH_DATA_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c1f37f25565f4d24bca4da0a75c8ce67/triggers/manual/paths/invoke?api-version=1";
-const FLOW_SAVE_EMPLOYEE_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/92f4023f477248a38a1c48ad6e9daa93/triggers/manual/paths/invoke?api-version=1";
-const FLOW_SEND_PAYROLL_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0ef16f7a85f54fcfaab7d494c333e1a9/triggers/manual/paths/invoke?api-version=1";
+// --- Configuration (URLs con Firma de Seguridad) ---
+const FLOW_REGISTER_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9ccaf784e77a414ab9b032ae8ad7d450/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=T14nJ8Ua92IMSXenhegGsk-O4K3pKwQNIZiJYP1crQM";
+const FLOW_LOGIN_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3c6016458c2843afb5091b6e1b0db33e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=CGe27Evn1LUONCnyq53oPTRwjdecJ-H3vZMtX9842go";
+const FLOW_FETCH_DATA_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c1f37f25565f4d24bca4da0a75c8ce67/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=tZ3nHj2huyoMFsznm5zseNflMkf7RYak_SZHj8yKPAc";
+const FLOW_SAVE_EMPLOYEE_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/92f4023f477248a38a1c48ad6e9daa93/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cBEZ7UO_0f0KU5-2nt88BqSzhnS38cSX7qd-Fu_giIk";
+const FLOW_SEND_PAYROLL_URL = "https://defaulte9f79ab3916f42a1b5f9b4a1f6a005.a0.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0ef16f7a85f54fcfaab7d494c333e1a9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=1ptS3PLYkNAlxx-jXZYQtWnQoe_J6Pvu-deV4-DI3T0";
 
 // --- Session & State ---
 let currentSession = JSON.parse(localStorage.getItem('currentSession')) || null;
@@ -40,9 +40,7 @@ function initEventListeners() {
     if(loginForm) loginForm.addEventListener('submit', handleLogin);
     
     const registerForm = document.getElementById('register-form');
-    if(registerForm) {
-        registerForm.onsubmit = handleRegister; // Método más directo
-    }
+    if(registerForm) registerForm.onsubmit = handleRegister;
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
@@ -106,16 +104,16 @@ async function handleLogin(e) {
             } else {
                 alert("RUC o PIN incorrectos.");
             }
+        } else {
+            alert("Error de Login (Microsoft " + response.status + ").");
         }
     } catch (err) {
-        alert("Error de conexión con Microsoft.");
+        alert("Error de conexión: " + err.message);
     }
 }
 
 async function handleRegister(e) {
     if(e) e.preventDefault();
-    console.log("Iniciando registro...");
-    
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerText;
     btn.innerText = "Registrando...";
@@ -136,7 +134,7 @@ async function handleRegister(e) {
         });
 
         if (response.ok) {
-            alert("¡EMPRESA REGISTRADA! Ya puedes cerrar esta ventana e iniciar sesión.");
+            alert("¡EMPRESA REGISTRADA CON ÉXITO! Ya puedes iniciar sesión.");
             window.closeAllModals();
         } else {
             alert("Error de Microsoft: " + response.status + ". Revisa si el flujo tiene el paso de 'Respuesta'.");
@@ -149,7 +147,7 @@ async function handleRegister(e) {
     }
 }
 
-// --- Data Fetching ---
+// --- Data Fetching & Rendering ---
 async function loadDataFromMicrosoft() {
     try {
         const response = await fetch(FLOW_FETCH_DATA_URL, {
@@ -207,7 +205,7 @@ function renderEmployees() {
     const list = document.getElementById('employees-table-body');
     if(!list) return;
     list.innerHTML = '';
-    employees.forEach((emp, index) => {
+    employees.forEach((emp) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${emp.NombreCompleto || emp.names || 'N/A'}</td>
