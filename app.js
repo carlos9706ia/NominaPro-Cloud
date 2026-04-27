@@ -329,7 +329,14 @@ async function loadDataFromMicrosoft() {
         });
 
         const data = await response.json();
-        employees = data.empleados || [];
+
+        let rawEmployees = data.empleados || [];
+        let uniqueEmps = {};
+        rawEmployees.forEach(emp => {
+            let key = emp.Cedula || emp.id || emp.Title || emp.NombreCompleto;
+            if (key) uniqueEmps[key] = emp;
+        });
+        employees = Object.values(uniqueEmps);
 
         // --- SOLUCIÓN DEFINITIVA: NO BORRAR EL HISTORIAL LOCAL ---
         // Cargamos lo que ya tenemos en localStorage para no perder nada
@@ -408,6 +415,7 @@ function renderEmployees() {
             <td>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="action-btn edit" title="Editar" onclick="editEmployee('${id}')"><i data-lucide="edit"></i></button>
+                    <button class="action-btn" title="Certificado Laboral" onclick="openCertificateModal('${id}')" style="color: var(--primary);"><i data-lucide="file-badge-2"></i></button>
                     <button class="action-btn delete" title="Eliminar" onclick="deleteEmployee('${id}')" style="color: var(--danger);"><i data-lucide="trash-2"></i></button>
                 </div>
             </td>
