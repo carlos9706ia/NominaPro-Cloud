@@ -5,13 +5,15 @@ window.openRegisterModal = (e) => {
     if (modal) modal.style.display = 'flex';
 };
 
-window.openEmployeeModal = () => {
+window.openEmployeeModal = (isEdit = false) => {
     const modal = document.getElementById('employee-modal');
     if (modal) {
-        document.getElementById('modal-title').textContent = "Agregar Empleado";
-        document.getElementById('edit-index').value = '';
-        const form = document.getElementById('employee-form');
-        if (form) form.reset();
+        if (!isEdit) {
+            document.getElementById('modal-title').textContent = "Agregar Empleado";
+            document.getElementById('edit-index').value = '';
+            const form = document.getElementById('employee-form');
+            if (form) form.reset();
+        }
         modal.style.display = 'flex';
         toggleBankFields(); // Asegurar estado inicial correcto
     }
@@ -465,7 +467,7 @@ window.editEmployee = (id) => {
     document.getElementById('emp-start-date').value = emp.FechaIngreso || emp.startDate || '';
     document.getElementById('emp-position').value = emp.Cargo || emp.position || '';
 
-    window.openEmployeeModal();
+    window.openEmployeeModal(true);
 };
 
 function renderGeneratorList() {
@@ -1140,8 +1142,7 @@ async function generateLaborCertificate() {
         ].join('\n');
 
         const margins = 20;
-        const printText = doc.splitTextToSize(textLines, pageWidth - (margins * 2));
-        doc.text(printText, margins, 100);
+        doc.text(textLines, margins, 100, { maxWidth: pageWidth - (margins * 2), align: "justify" });
 
         // --- Footer ---
         const footerY = 200;
