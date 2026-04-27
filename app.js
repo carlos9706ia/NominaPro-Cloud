@@ -1148,9 +1148,10 @@ async function generateLaborCertificate() {
         const footerY = 200;
         doc.setFont("helvetica", "bold");
         doc.text("Atentamente,", 20, footerY);
-        doc.text(currentSession.name || "Representante Legal", 20, footerY + 60);
+        // The signature block ends at ~230mm. We place the text right below it at 235mm.
+        doc.text(currentSession.name || "Representante Legal", 20, footerY + 35);
         doc.setFont("helvetica", "normal");
-        doc.text(`RUC: ${currentSession.ruc || ""}`, 20, footerY + 66);
+        doc.text(`RUC: ${currentSession.ruc || ""}`, 20, footerY + 41);
 
         // --- Signature & Seal ---
         const pdfBlob = doc.output('blob');
