@@ -1136,7 +1136,7 @@ async function generateLaborCertificate() {
         doc.setFontSize(12);
 
         const textLines = [
-            `Por medio de la presente, certificamos que el Sr./Sra. ${empName} con cédula de identidad ${empCedula} labora en nuestra empresa ${currentSession.company || "la empresa"} desde el ${startDateFormatted}, desempeñándose como ${position}. Actualmente, percibe un salario base mensual de $${salary}.`,
+            `Por medio de la presente, certificamos que el Sr./Sra. ${empName} con cédula de identidad ${empCedula} labora en nuestra empresa ${currentSession.company || "la empresa"} desde el ${startDateFormatted}, desempeñándose como ${position}. Actualmente, percibe un salario mensual de $${salary}.`,
             ``,
             `Se expide el presente certificado de acuerdo a la solicitud del interesado para los fines que crea conveniente.`
         ].join('\n');
@@ -1157,10 +1157,8 @@ async function generateLaborCertificate() {
         let finalPdfBlob = pdfBlob;
 
         try {
-            const pageHeight = doc.internal.pageSize.getHeight();
-            // jsPDF origin is top-left, pdf-lib origin is bottom-left
-            // Place signature right below "Atentamente," (footerY + 5 points)
-            finalPdfBlob = await signPDF(pdfBlob, { x: 20, y: pageHeight - footerY - 5 - 42 });
+            // Asigna coordenadas absolutas para pdf-lib (1mm = ~2.8346 pts)
+            finalPdfBlob = await signPDF(pdfBlob, { x: 57, y: 190 });
         } catch (e) {
             console.warn("Error en proceso de firma:", e);
         }
