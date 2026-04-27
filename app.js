@@ -637,12 +637,12 @@ async function sendPayrollEmail(empId, silent = false) {
         // --- Encabezado ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text(currentSession.name || "EMPRESA", 15, 20);
+        doc.text(currentSession.company || "EMPRESA", 15, 20);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.text(`RUC: ${currentSession.ruc || ""}`, 15, 26);
-        doc.text(`REPRESENTANTE: ${currentSession.company || ""}`, 15, 31);
+        doc.text(`REPRESENTANTE: ${currentSession.name || ""}`, 15, 31);
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
@@ -895,12 +895,12 @@ async function sendPayroll(empId) {
         // --- Encabezado ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text(currentSession.name || "EMPRESA", 15, 20);
+        doc.text(currentSession.company || "EMPRESA", 15, 20);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.text(`RUC: ${currentSession.ruc || ""}`, 15, 26);
-        doc.text(`REPRESENTANTE: ${currentSession.company || ""}`, 15, 31);
+        doc.text(`REPRESENTANTE: ${currentSession.name || ""}`, 15, 31);
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
