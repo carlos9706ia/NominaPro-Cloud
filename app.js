@@ -8,6 +8,10 @@ window.openRegisterModal = (e) => {
 window.openEmployeeModal = () => {
     const modal = document.getElementById('employee-modal');
     if (modal) {
+        document.getElementById('modal-title').textContent = "Agregar Empleado";
+        document.getElementById('edit-index').value = '';
+        const form = document.getElementById('employee-form');
+        if (form) form.reset();
         modal.style.display = 'flex';
         toggleBankFields(); // Asegurar estado inicial correcto
     }
