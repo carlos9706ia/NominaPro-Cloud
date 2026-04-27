@@ -805,7 +805,7 @@ async function sendPayrollEmail(empId, silent = false) {
     }
 }
 
-async function signPDF(pdfBlob) {
+async function signPDF(pdfBlob, options = {}) {
     if (!currentSession.p12 || !currentSession.p12Pass) return pdfBlob;
 
     try {
@@ -825,8 +825,8 @@ async function signPDF(pdfBlob) {
         // 2. Estampar cuadro visual (DISEÑO UNIFICADO)
         const boxW = 220;
         const boxH = 42;
-        const x = width - boxW - 40;
-        const y = 60;
+        const x = options.x !== undefined ? options.x : width - boxW - 40;
+        const y = options.y !== undefined ? options.y : 60;
         const blueCol = rgb(0.05, 0.25, 0.5);
 
         // A. Fondo total blanco
@@ -1148,16 +1148,19 @@ async function generateLaborCertificate() {
         const footerY = 200;
         doc.setFont("helvetica", "bold");
         doc.text("Atentamente,", 20, footerY);
-        doc.text(currentSession.name || "Representante Legal", 20, footerY + 25);
+        doc.text(currentSession.name || "Representante Legal", 20, footerY + 60);
         doc.setFont("helvetica", "normal");
-        doc.text(`RUC: ${currentSession.ruc || ""}`, 20, footerY + 31);
+        doc.text(`RUC: ${currentSession.ruc || ""}`, 20, footerY + 66);
 
         // --- Signature & Seal ---
         const pdfBlob = doc.output('blob');
         let finalPdfBlob = pdfBlob;
 
         try {
-            finalPdfBlob = await signPDF(pdfBlob);
+            const pageHeight = doc.internal.pageSize.getHeight();
+            // jsPDF origin is top-left, pdf-lib origin is bottom-left
+            // Place signature right below "Atentamente," (footerY + 5 points)
+            finalPdfBlob = await signPDF(pdfBlob, { x: 20, y: pageHeight - footerY - 5 - 42 });
         } catch (e) {
             console.warn("Error en proceso de firma:", e);
         }
