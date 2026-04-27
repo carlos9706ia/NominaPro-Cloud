@@ -99,7 +99,7 @@ function initEventListeners() {
     if (employerForm) employerForm.onsubmit = handleEmployerUpdate;
 
     const bulkBtn = document.getElementById('bulk-generate-btn');
-    if(bulkBtn) bulkBtn.onclick = handleBulkGenerate;
+    if (bulkBtn) bulkBtn.onclick = handleBulkGenerate;
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = window.closeAllModals;
@@ -162,9 +162,9 @@ async function handleLogin(e) {
                         company: data.NombreEmpresa || data.name || 'Empresa',
                         ruc: data.Title || data.ruc
                     };
-                    
+
                     currentSession = { ruc: ruc, employer: empData };
-                    
+
                     // Recuperar p12 de persistencia si coincide el RUC
                     if (persistentEmployer && persistentEmployer.ruc === ruc) {
                         currentSession = { ...currentSession, ...persistentEmployer };
@@ -225,13 +225,13 @@ async function handleRegister(e) {
 }
 
 async function handleEmployerUpdate(e) {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     const btn = e.target.querySelector('button');
     btn.innerText = "Guardando...";
 
     const p12File = document.getElementById('p12-file').files[0];
     let p12Base64 = currentSession.p12 || "";
-    
+
     if (p12File) {
         p12Base64 = await new Promise((resolve) => {
             const reader = new FileReader();
@@ -253,7 +253,7 @@ async function handleEmployerUpdate(e) {
     localStorage.setItem('currentSession', JSON.stringify(currentSession));
     localStorage.setItem('persistentEmployer', JSON.stringify(updatedData)); // Guardado permanente
     employer = updatedData;
-    
+
     alert("Configuración actualizada con éxito.");
     btn.innerText = "Guardar Cambios";
     updateSignatureStatus();
@@ -263,7 +263,7 @@ async function handleEmployerUpdate(e) {
 function updateSignatureStatus() {
     const fileLabel = document.querySelector('label[for="p12-file"]') || { innerText: '' };
     const statusEl = document.getElementById('p12-status');
-    
+
     if (currentSession && currentSession.p12) {
         if (!statusEl) {
             const span = document.createElement('span');
@@ -292,6 +292,8 @@ async function handleSaveEmployee(e) {
         bank: document.getElementById('emp-bank').value,
         accountType: document.getElementById('emp-account-type').value,
         account: document.getElementById('emp-account-number').value,
+        startDate: document.getElementById('emp-start-date').value,
+        position: document.getElementById('emp-position').value,
         ruc: currentSession.ruc
     };
 
@@ -332,7 +334,7 @@ async function loadDataFromMicrosoft() {
         // --- SOLUCIÓN DEFINITIVA: NO BORRAR EL HISTORIAL LOCAL ---
         // Cargamos lo que ya tenemos en localStorage para no perder nada
         const localHistory = JSON.parse(localStorage.getItem('payrollHistory')) || {};
-        
+
         // Fusionamos con los roles que vienen de Microsoft (si vienen)
         if (data.roles) {
             data.roles.forEach(role => {
@@ -349,7 +351,7 @@ async function loadDataFromMicrosoft() {
                 }
             });
         }
-        
+
         // Actualizamos el estado global con la fusión
         payrollHistory = localHistory;
         localStorage.setItem('payrollHistory', JSON.stringify(payrollHistory));
@@ -357,12 +359,12 @@ async function loadDataFromMicrosoft() {
         renderEmployees();
         renderDashboard();
         renderGeneratorList();
-        
+
         // Cargar datos en la sección de configuración
         if (employer) {
-            if(document.getElementById('company-name')) document.getElementById('company-name').value = employer.company || '';
-            if(document.getElementById('company-ruc')) document.getElementById('company-ruc').value = employer.ruc || '';
-            if(document.getElementById('company-owner')) document.getElementById('company-owner').value = employer.name || '';
+            if (document.getElementById('company-name')) document.getElementById('company-name').value = employer.company || '';
+            if (document.getElementById('company-ruc')) document.getElementById('company-ruc').value = employer.ruc || '';
+            if (document.getElementById('company-owner')) document.getElementById('company-owner').value = employer.name || '';
             updateSignatureStatus();
         }
     } catch (err) {
@@ -385,7 +387,7 @@ function switchSection(sectionId, navItem) {
 }
 
 function logout(e) {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     localStorage.removeItem('currentSession');
     // Mantenemos 'persistentEmployer' intacto
     location.reload();
@@ -393,7 +395,7 @@ function logout(e) {
 
 function renderEmployees() {
     const list = document.getElementById('employees-table-body');
-    if(!list) return;
+    if (!list) return;
     list.innerHTML = '';
     employees.forEach((emp) => {
         const tr = document.createElement('tr');
@@ -437,7 +439,9 @@ window.editEmployee = (id) => {
     document.getElementById('emp-bank').value = emp.Banco || emp.bank || '';
     document.getElementById('emp-account-type').value = emp.TipoCuenta || emp.accountType || 'Ahorros';
     document.getElementById('emp-account-number').value = emp.Cuenta || emp.account || '';
-    
+    document.getElementById('emp-start-date').value = emp.FechaIngreso || emp.startDate || '';
+    document.getElementById('emp-position').value = emp.Cargo || emp.position || '';
+
     window.openEmployeeModal();
 };
 
@@ -470,6 +474,11 @@ function renderGeneratorList() {
                     <button class="action-btn" title="Descargar PDF" onclick="sendPayroll('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--primary);"><i data-lucide="download"></i></button>
                     <button class="action-btn" title="Re-enviar por Correo" onclick="sendPayrollEmail('${id}')" ${config.net === 0 ? 'disabled' : ''} style="color: var(--success);"><i data-lucide="refresh-cw"></i></button>
                 </div>
+            </td>
+            <td>
+                <button class="btn btn-small" title="Certificado Laboral" onclick="openCertificateModal('${id}')" style="background: var(--primary); padding: 5px 10px;">
+                    <i data-lucide="file-text"></i>
+                </button>
             </td>
         `;
         list.appendChild(tr);
@@ -511,12 +520,12 @@ window.openPayrollConfig = (empId) => {
     if (existing) {
         document.getElementById('base-salary').value = existing.baseSalary || existing.salary || 460;
         document.getElementById('payroll-days').value = existing.days || 30;
-        
+
         // Re-generar filas de extras si es necesario (Opcional, por ahora limpiamos)
     }
 
     const modal = document.getElementById('payroll-modal');
-    
+
     // Calcular días automáticos según el mes
     const monthVal = document.getElementById('payroll-month').value;
     if (monthVal) {
@@ -604,7 +613,7 @@ async function handleBulkGenerate() {
             const empId = cb.getAttribute('data-id');
             await sendPayrollEmail(empId, true); // Envío automático
         }
-        
+
         document.body.removeChild(loader);
         alert("✅ Todos los roles han sido generados y enviados.");
     }
@@ -630,29 +639,29 @@ async function sendPayrollEmail(empId, silent = false) {
         // 1. Detección robusta de la librería jsPDF
         const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
         if (!jsPDFLib) throw new Error("La librería de PDF no se cargó correctamente. Por favor, refresca la página.");
-        
+
         const doc = new jsPDFLib();
         const pageWidth = doc.internal.pageSize.getWidth();
-        
+
         // --- Encabezado ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
         doc.text(currentSession.company || "EMPRESA", 15, 20);
-        
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.text(`RUC: ${currentSession.ruc || ""}`, 15, 26);
         doc.text(`REPRESENTANTE: ${currentSession.name || ""}`, 15, 31);
-        
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
         doc.text("ROL DE PAGO INDIVIDUAL", pageWidth - 15, 20, { align: "right" });
         doc.setFontSize(12);
         doc.text(`MES DE ${month}`, pageWidth - 15, 26, { align: "right" });
-        
+
         doc.setLineWidth(0.5);
         doc.line(15, 36, pageWidth - 15, 36);
-        
+
         // --- Datos Empleado ---
         doc.setFontSize(11);
         doc.text("DATOS DEL EMPLEADO", 15, 45);
@@ -662,10 +671,10 @@ async function sendPayrollEmail(empId, silent = false) {
         const [y, m] = month.split('-');
         const lastDay = new Date(y, m, 0).getDate();
         doc.text(`PERIODO: desde 01/${m}-${y} al ${lastDay}/${m}-${y}`, 15, 62);
-        
+
         const displayDays = data.days || lastDay;
         doc.text(`DÍAS TRABAJADOS: ${displayDays}`, 15, 67);
-        
+
         // --- Tabla Ingresos ---
         const bSalary = data.baseSalary || data.salary || 0;
         const tIn = data.totalIn || data.total || bSalary;
@@ -682,7 +691,7 @@ async function sendPayrollEmail(empId, silent = false) {
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
             margin: { left: 15, right: 15 }
         });
-        
+
         // --- Tabla Egresos ---
         const tOut = data.totalOut || (data.iess || (bSalary * 0.0945));
         doc.autoTable({
@@ -697,7 +706,7 @@ async function sendPayrollEmail(empId, silent = false) {
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
             margin: { left: 15, right: 15 }
         });
-        
+
         // --- Totales Finales ---
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(10);
@@ -705,16 +714,16 @@ async function sendPayrollEmail(empId, silent = false) {
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
         doc.text(`$${(data.net || 0).toFixed(2)}`, 15, finalY + 8);
-        
+
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
         doc.text(`FORMA DE PAGO: ${emp.MetodoPago || emp.FormaPago || "TRANSFERENCIA"}`, 15, finalY + 15);
         doc.text(`BANCO/CUENTA: ${emp.Banco || emp.bank || ""} | ${emp.TipoCuenta || emp.accountType || ""} | ${emp.Cuenta || emp.NumeroCuenta || emp.account || ""}`, 15, finalY + 20);
-        
+
         // --- Firmas ---
         doc.text("Firma del Empleador", 15, finalY + 30);
         doc.text("Firma del Empleado", 15, finalY + 35);
-        
+
         const pdfBlob = doc.output('blob');
 
         // 2. Firmar el PDF (Con protección)
@@ -724,7 +733,7 @@ async function sendPayrollEmail(empId, silent = false) {
         } catch (e) {
             console.warn("Firma falló, enviando original:", e);
         }
-        
+
         // 3. Convertir a Base64 para enviar
         const reader = new FileReader();
         const base64Pdf = await new Promise(resolve => {
@@ -789,10 +798,10 @@ async function signPDF(pdfBlob) {
         const qrImage = await pdfDoc.embedPng(qrBase64);
 
         // 2. Estampar cuadro visual (DISEÑO UNIFICADO)
-        const boxW = 220; 
+        const boxW = 220;
         const boxH = 42;
-        const x = width - boxW - 40; 
-        const y = 60; 
+        const x = width - boxW - 40;
+        const y = 60;
         const blueCol = rgb(0.05, 0.25, 0.5);
 
         // A. Fondo total blanco
@@ -813,7 +822,7 @@ async function signPDF(pdfBlob) {
             borderColor: blueCol,
             borderWidth: 1.5,
         });
-        
+
         // D. Texto Vertical "FIRMADO" (Centrado)
         firstPage.drawText("FIRMADO", {
             x: x + 8, y: y + 8, size: 7, color: rgb(1, 1, 1), rotate: { angle: 90, type: 'degrees' }, font: fontBold
@@ -891,36 +900,36 @@ async function sendPayroll(empId) {
 
         const doc = new jsPDFLib();
         const pageWidth = doc.internal.pageSize.getWidth();
-        
+
         // --- Encabezado ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
         doc.text(currentSession.company || "EMPRESA", 15, 20);
-        
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.text(`RUC: ${currentSession.ruc || ""}`, 15, 26);
         doc.text(`REPRESENTANTE: ${currentSession.name || ""}`, 15, 31);
-        
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
         doc.text("ROL DE PAGO INDIVIDUAL", pageWidth - 15, 20, { align: "right" });
         doc.setFontSize(12);
         doc.text(`MES DE ${month}`, pageWidth - 15, 26, { align: "right" });
-        
+
         doc.setLineWidth(0.5);
         doc.line(15, 36, pageWidth - 15, 36);
-        
+
         // --- Datos Empleado ---
         doc.setFontSize(11);
         doc.text("DATOS DEL EMPLEADO", 15, 45);
         const [y2, m2] = month.split('-');
         const lastDay2 = new Date(y2, m2, 0).getDate();
         doc.text(`PERIODO: desde 01/${m2}-${y2} al ${lastDay2}/${m2}-${y2}`, 15, 62);
-        
+
         const displayDays2 = data.days || lastDay2;
         doc.text(`DÍAS TRABAJADOS: ${displayDays2}`, 15, 67);
-        
+
         // --- Tablas ---
         const bSalary2 = data.baseSalary || data.salary || 0;
         const tIn2 = data.totalIn || data.total || bSalary2;
@@ -937,7 +946,7 @@ async function sendPayroll(empId) {
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
             margin: { left: 15, right: 15 }
         });
-        
+
         const tOut2 = data.totalOut || (data.iess || (bSalary2 * 0.0945));
         doc.autoTable({
             startY: doc.lastAutoTable.finalY + 10,
@@ -951,31 +960,31 @@ async function sendPayroll(empId) {
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
             margin: { left: 15, right: 15 }
         });
-        
+
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(10);
         doc.text("NETO A RECIBIR", 15, finalY);
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
         doc.text(`$${(data.net || 0).toFixed(2)}`, 15, finalY + 8);
-        
+
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
         doc.text(`FORMA DE PAGO: ${emp.MetodoPago || "TRANSFERENCIA"}`, 15, finalY + 15);
         doc.text(`BANCO/CUENTA: ${emp.Banco || emp.bank || ""} | ${emp.TipoCuenta || emp.accountType || ""} | ${emp.Cuenta || emp.NumeroCuenta || emp.account || ""}`, 15, finalY + 20);
-        
+
         doc.text("Firma del Empleador", 15, finalY + 30);
         doc.text("Firma del Empleado", 15, finalY + 35);
-        
+
         const pdfBlob = doc.output('blob');
-        
+
         let finalPdfBlob = pdfBlob;
         try {
             finalPdfBlob = await signPDF(pdfBlob);
         } catch (e) {
             console.warn("Firma falló, descargando original.");
         }
-        
+
         const url = URL.createObjectURL(finalPdfBlob);
         const a = document.createElement('a');
         a.href = url;
@@ -993,7 +1002,7 @@ function fillPdfTemplate(emp, data, month) {
     const [year, monthNum] = month.split('-');
     const lastDay = new Date(year, monthNum, 0).getDate();
     const dateRange = `desde: 01/${monthNum}/${year} al ${lastDay}/${monthNum}/${year}`;
-    
+
     // Sello de tiempo generación
     const now = new Date();
     const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1003,9 +1012,9 @@ function fillPdfTemplate(emp, data, month) {
     document.getElementById('pdf-owner').textContent = employer.name;
     document.getElementById('pdf-period').textContent = `MES DE ${month}`;
     document.getElementById('pdf-date-range').textContent = dateRange;
-    document.getElementById('pdf-days').textContent = lastDay; 
+    document.getElementById('pdf-days').textContent = lastDay;
     document.getElementById('pdf-generation-time').textContent = timestamp;
-    
+
     document.getElementById('pdf-emp-name').textContent = emp.NombreCompleto || emp.names;
     document.getElementById('pdf-emp-id').textContent = emp.Title || emp.id;
     document.getElementById('pdf-salary').textContent = data.salary.toFixed(2);
@@ -1014,7 +1023,7 @@ function fillPdfTemplate(emp, data, month) {
     document.getElementById('pdf-total-income').textContent = (data.salary + (data.extraIncome || 0)).toFixed(2);
     document.getElementById('pdf-total-deductions').textContent = (data.iess + (data.extraDeductions || 0)).toFixed(2);
     document.getElementById('pdf-net-pay').textContent = `$${data.net.toFixed(2)}`;
-    
+
     const method = emp.FormaPago || emp.paymentMethod || 'EFECTIVO';
     document.getElementById('pdf-payment-method').textContent = method.toUpperCase();
 
@@ -1039,4 +1048,99 @@ function renderDashboard() {
 function initDate() {
     const el = document.getElementById('current-date');
     if (el) el.textContent = new Date().toLocaleDateString();
+}
+
+window.openCertificateModal = (empId) => {
+    const modal = document.getElementById('certificate-modal');
+    if (modal) {
+        document.getElementById('cert-emp-id').value = empId;
+        modal.style.display = 'flex';
+        lucide.createIcons();
+    }
+};
+
+async function generateLaborCertificate() {
+    const empId = document.getElementById('cert-emp-id').value;
+    const city = document.getElementById('cert-city').value;
+    const emp = employees.find(e => (e.Title || e.id || e.NombreCompleto) === empId);
+
+    if (!emp) {
+        alert("Empleado no encontrado.");
+        return;
+    }
+
+    const month = document.getElementById('payroll-month').value;
+    const payrollData = getEmployeeData(emp, month) || { baseSalary: 460 };
+    const salary = (payrollData.baseSalary || payrollData.salary || 460).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+    let startDateRaw = emp.FechaIngreso || emp.startDate || "";
+    let startDateFormatted = "---";
+    if (startDateRaw) {
+        const d = new Date(startDateRaw + 'T00:00:00');
+        startDateFormatted = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    const position = emp.Cargo || emp.position || "Empleado";
+
+    try {
+        const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+        if (!jsPDFLib) throw new Error("jsPDF no cargado correctamente.");
+
+        const doc = new jsPDFLib();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // --- Header ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(currentSession.company || "EMPRESA", pageWidth / 2, 30, { align: "center" });
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const dateObj = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const dateStr = dateObj.toLocaleDateString('es-ES', options);
+        doc.text(`${city}, ${dateStr}`, 15, 50);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text("CERTIFICADO LABORAL", pageWidth / 2, 80, { align: "center" });
+
+        // --- Body ---
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        const bodyText = `Por medio de la presente, certificamos que el Sr./Sra. ${emp.NombreCompleto || emp.names} con cédula de identidad ${emp.Cedula || emp.id} labora en nuestra empresa ${currentSession.company || "la empresa"} desde el ${startDateFormatted}, desempeñándose como ${position}. Actualmente, percibe un salario mensual de $${salary}.\n\nSe expide el presente certificado de acuerdo a la solicitud del interesado para los fines que crea conveniente.`;
+
+        const splitText = doc.splitTextToSize(bodyText, pageWidth - 40);
+        doc.text(splitText, 20, 100, { align: "justify" });
+
+        // --- Footer ---
+        const footerY = 200;
+        doc.setFont("helvetica", "bold");
+        doc.text("Atentamente,", 20, footerY);
+        doc.text(currentSession.name || "Representante Legal", 20, footerY + 25);
+        doc.setFont("helvetica", "normal");
+        doc.text(`RUC: ${currentSession.ruc || ""}`, 20, footerY + 31);
+
+        // --- Signature & Seal ---
+        const pdfBlob = doc.output('blob');
+        let finalPdfBlob = pdfBlob;
+
+        try {
+            finalPdfBlob = await signPDF(pdfBlob);
+        } catch (e) {
+            console.warn("Error en proceso de firma:", e);
+        }
+
+        const url = URL.createObjectURL(finalPdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Certificado_Laboral_${(emp.NombreCompleto || emp.names).replace(/\s+/g, '_')}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        window.closeAllModals();
+    } catch (err) {
+        console.error("Error crítico:", err);
+        alert("Fallo al generar el PDF: " + err.message);
+    }
 }

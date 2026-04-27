@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,19 +17,20 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         function openRegisterModal(e) {
-            if(e) e.preventDefault();
+            if (e) e.preventDefault();
             var modal = document.getElementById('register-modal');
-            if(modal) modal.style.display = 'flex';
+            if (modal) modal.style.display = 'flex';
             else alert("No se encontró el modal");
         }
         function closeAllModals() {
             var modals = document.getElementsByClassName('modal');
-            for(var i=0; i<modals.length; i++) {
+            for (var i = 0; i < modals.length; i++) {
                 modals[i].style.display = 'none';
             }
         }
     </script>
 </head>
+
 <body>
     <!-- Login Screen Overlay -->
     <div id="login-overlay" class="login-overlay">
@@ -102,7 +104,8 @@
                 </div>
                 <div class="user-profile">
                     <div class="user-details text-right">
-                        <div id="display-ceo" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);"></div>
+                        <div id="display-ceo" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">
+                        </div>
                         <div id="display-company" style="font-size: 0.8rem; color: var(--primary-color);"></div>
                     </div>
                 </div>
@@ -154,9 +157,11 @@
                                 <input type="text" id="company-owner" required>
                             </div>
                         </div>
-                        
-                        <div class="form-section" style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                            <h4 style="color: var(--primary); margin-bottom: 1rem;"><i data-lucide="shield-check"></i> Firma Electrónica (.p12)</h4>
+
+                        <div class="form-section"
+                            style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                            <h4 style="color: var(--primary); margin-bottom: 1rem;"><i data-lucide="shield-check"></i>
+                                Firma Electrónica (.p12)</h4>
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="p12-file">Archivo Certificado (.p12)</label>
@@ -168,7 +173,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Guardar Cambios</button>
                     </form>
                 </div>
@@ -218,13 +223,15 @@
                         <table id="generator-table">
                             <thead>
                                 <tr>
-                                    <th><input type="checkbox" id="select-all-emps" onchange="toggleSelectAll(this)"></th>
+                                    <th><input type="checkbox" id="select-all-emps" onchange="toggleSelectAll(this)">
+                                    </th>
                                     <th>Empleado</th>
                                     <th>Sueldo Base</th>
                                     <th>IESS (9.45%)</th>
                                     <th>Neto</th>
                                     <th>Acciones</th>
-                                    <th>Correo</th>
+                                    <th>Roles</th>
+                                    <th>Certificado</th>
                                 </tr>
                             </thead>
                             <tbody id="generator-list">
@@ -238,6 +245,38 @@
     </div>
 
     <!-- Modals -->
+    <div id="certificate-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Emitir Certificado Laboral</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="premium-form">
+                <input type="hidden" id="cert-emp-id">
+                <div class="form-group">
+                    <label for="cert-city">Ciudad de Emisión</label>
+                    <select id="cert-city" required>
+                        <option value="Guayaquil">Guayaquil</option>
+                        <option value="Quito">Quito</option>
+                        <option value="Cuenca">Cuenca</option>
+                        <option value="Manta">Manta</option>
+                        <option value="Portoviejo">Portoviejo</option>
+                        <option value="Ambato">Ambato</option>
+                        <option value="Loja">Loja</option>
+                        <option value="Machala">Machala</option>
+                        <option value="Durán">Durán</option>
+                        <option value="Santo Domingo">Santo Domingo</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary btn-block" onclick="generateLaborCertificate()">
+                        <i data-lucide="file-text"></i>
+                        Generar Certificado
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="employee-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -266,6 +305,14 @@
                             <option value="Efectivo">Efectivo</option>
                             <option value="Cheque">Cheque</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="emp-start-date">Fecha de Ingreso</label>
+                        <input type="date" id="emp-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emp-position">Cargo / Puesto</label>
+                        <input type="text" id="emp-position" placeholder="Ej: Gerente de Ventas" required>
                     </div>
                 </div>
 
@@ -302,11 +349,12 @@
             </div>
             <form id="payroll-form" class="premium-form">
                 <input type="hidden" id="payroll-emp-id-hidden">
-                <div id="payroll-employee-info" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 10px; border-left: 4px solid var(--primary);">
+                <div id="payroll-employee-info"
+                    style="margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 10px; border-left: 4px solid var(--primary);">
                     <strong id="payroll-emp-name">Cargando...</strong><br>
                     <span id="payroll-emp-id-display" class="text-sm opacity-70">ID: ---</span>
                 </div>
-                
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Sueldo Base ($)</label>
@@ -319,8 +367,10 @@
                 </div>
 
                 <div class="form-section">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3 style="font-size: 0.9rem; color: var(--success);">+ Otros Ingresos (Bonos, Horas Extras)</h3>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.9rem; color: var(--success);">+ Otros Ingresos (Bonos, Horas Extras)
+                        </h3>
                         <button type="button" class="btn btn-small btn-success" onclick="addExtraRow('income-list')">
                             <i data-lucide="plus"></i> Añadir
                         </button>
@@ -329,7 +379,8 @@
                 </div>
 
                 <div class="form-section" style="border-top: 1px solid #eee; padding-top: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3 style="font-size: 0.9rem; color: var(--danger);">- Otros Egresos (Anticipos, Multas)</h3>
                         <button type="button" class="btn btn-small btn-danger" onclick="addExtraRow('deduction-list')">
                             <i data-lucide="plus"></i> Añadir
@@ -344,9 +395,13 @@
             </form>
         </div>
     </div>
-    <div id="pdf-template" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; overflow-y: auto; padding: 20mm;" onclick="this.style.display='none'">
-        <div style="position: fixed; top: 20px; right: 20px; color: white; cursor: pointer; font-size: 2rem;">&times;</div>
-        <div class="pdf-container" id="pdf-content-to-capture" onclick="event.stopPropagation()" style="background: white; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); height: 290mm; max-height: 290mm; overflow: hidden; position: relative;">
+    <div id="pdf-template"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; overflow-y: auto; padding: 20mm;"
+        onclick="this.style.display='none'">
+        <div style="position: fixed; top: 20px; right: 20px; color: white; cursor: pointer; font-size: 2rem;">&times;
+        </div>
+        <div class="pdf-container" id="pdf-content-to-capture" onclick="event.stopPropagation()"
+            style="background: white; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); height: 290mm; max-height: 290mm; overflow: hidden; position: relative;">
             <div class="pdf-header">
                 <div class="company-info pdf-company-info">
                     <h1 id="pdf-company-name">NOMBRE EMPRESA</h1>
@@ -429,7 +484,8 @@
                 </div>
                 <div class="payment-method-info">
                     <p>FORMA DE PAGO: <span id="pdf-payment-method">EFECTIVO</span></p>
-                    <p id="pdf-bank-row" style="display: none; margin-top: 5px;"><strong>BANCO/CUENTA:</strong> <span id="pdf-bank-info"></span></p>
+                    <p id="pdf-bank-row" style="display: none; margin-top: 5px;"><strong>BANCO/CUENTA:</strong> <span
+                            id="pdf-bank-info"></span></p>
                 </div>
             </div>
 
@@ -443,8 +499,9 @@
                     <p>Firma del Empleado</p>
                 </div>
             </div>
-            
-            <div class="pdf-footer" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; font-size: 8pt; color: #666; display: flex; justify-content: space-between;">
+
+            <div class="pdf-footer"
+                style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; font-size: 8pt; color: #666; display: flex; justify-content: space-between;">
                 <span>Este documento es un comprobante legal de pago de haberes conforme a la normativa vigente.</span>
                 <span>Generado el: <span id="pdf-generation-time"></span></span>
             </div>
@@ -488,4 +545,5 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
