@@ -66,6 +66,7 @@ if (currentSession && persistentEmployer) {
 
 let employees = [];
 let payrollHistory = JSON.parse(localStorage.getItem('payrollHistory')) || {};
+let localEmployeeMeta = JSON.parse(localStorage.getItem('localEmployeeMeta')) || {};
 let employer = persistentEmployer || { name: '', company: '', ruc: '' };
 
 // --- Initialization ---
@@ -301,6 +302,12 @@ async function handleSaveEmployee(e) {
         ruc: currentSession.ruc
     };
 
+    localEmployeeMeta[payload.id] = {
+        startDate: payload.startDate,
+        position: payload.position
+    };
+    localStorage.setItem('localEmployeeMeta', JSON.stringify(localEmployeeMeta));
+
     try {
         const response = await fetch(FLOW_SAVE_EMPLOYEE_URL, {
             method: 'POST',
@@ -338,7 +345,11 @@ async function loadDataFromMicrosoft() {
         let uniqueEmps = {};
         rawEmployees.forEach(emp => {
             let key = emp.Cedula || emp.id || emp.Title || emp.NombreCompleto;
-            if (key) uniqueEmps[key] = emp;
+            if (key) {
+                // Merge persistent local items
+                const meta = localEmployeeMeta[key] || {};
+                uniqueEmps[key] = { ...emp, ...meta };
+            }
         });
         employees = Object.values(uniqueEmps);
 
@@ -1074,6 +1085,7 @@ window.openCertificateModal = (empId) => {
 async function generateLaborCertificate() {
     const empId = document.getElementById('cert-emp-id').value;
     const city = document.getElementById('cert-city').value;
+    const certSalaryNum = parseFloat(document.getElementById('cert-salary').value) || 460;
     const emp = employees.find(e => (e.Title || e.id || e.NombreCompleto) === empId);
 
     if (!emp) {
@@ -1081,9 +1093,7 @@ async function generateLaborCertificate() {
         return;
     }
 
-    const month = document.getElementById('payroll-month').value;
-    const payrollData = getEmployeeData(emp, month) || { baseSalary: 460 };
-    const salary = (payrollData.baseSalary || payrollData.salary || 460).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const salary = certSalaryNum.toLocaleString('en-US', { minimumFractionDigits: 2 });
 
     let startDateRaw = emp.FechaIngreso || emp.startDate || "";
     let startDateFormatted = "---";
@@ -1093,6 +1103,8 @@ async function generateLaborCertificate() {
     }
 
     const position = emp.Cargo || emp.position || "Empleado";
+    const empCedula = emp.Cedula || emp.id || emp.Title || "No especificada";
+    const empName = emp.NombreCompleto || emp.names || "No especificado";
 
     try {
         const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
@@ -1120,10 +1132,16 @@ async function generateLaborCertificate() {
         // --- Body ---
         doc.setFont("helvetica", "normal");
         doc.setFontSize(12);
-        const bodyText = `Por medio de la presente, certificamos que el Sr./Sra. ${emp.NombreCompleto || emp.names} con cédula de identidad ${emp.Cedula || emp.id} labora en nuestra empresa ${currentSession.company || "la empresa"} desde el ${startDateFormatted}, desempeñándose como ${position}. Actualmente, percibe un salario mensual de $${salary}.\n\nSe expide el presente certificado de acuerdo a la solicitud del interesado para los fines que crea conveniente.`;
 
-        const splitText = doc.splitTextToSize(bodyText, pageWidth - 40);
-        doc.text(splitText, 20, 100, { align: "justify" });
+        const textLines = [
+            `Por medio de la presente, certificamos que el Sr./Sra. ${empName} con cédula de identidad ${empCedula} labora en nuestra empresa ${currentSession.company || "la empresa"} desde el ${startDateFormatted}, desempeñándose como ${position}. Actualmente, percibe un salario base mensual de $${salary}.`,
+            ``,
+            `Se expide el presente certificado de acuerdo a la solicitud del interesado para los fines que crea conveniente.`
+        ].join('\n');
+
+        const margins = 20;
+        const printText = doc.splitTextToSize(textLines, pageWidth - (margins * 2));
+        doc.text(printText, margins, 100);
 
         // --- Footer ---
         const footerY = 200;
@@ -1146,7 +1164,7 @@ async function generateLaborCertificate() {
         const url = URL.createObjectURL(finalPdfBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Certificado_Laboral_${(emp.NombreCompleto || emp.names).replace(/\s+/g, '_')}.pdf`;
+        a.download = `Certificado_Laboral_${empName.replace(/\s+/g, '_')}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
 
