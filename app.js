@@ -1135,14 +1135,14 @@ async function generateLaborCertificate() {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(12);
 
-        const textLines = [
-            `Por medio de la presente, certificamos que el Sr./Sra. ${empName} con cédula de identidad ${empCedula} labora en nuestra empresa ${currentSession.company || "la empresa"} desde el ${startDateFormatted}, desempeñándose como ${position}. Actualmente, percibe un salario mensual de $${salary}.`,
-            ``,
-            `Se expide el presente certificado de acuerdo a la solicitud del interesado para los fines que crea conveniente.`
-        ].join('\n');
-
         const margins = 20;
-        doc.text(textLines, margins, 100, { maxWidth: pageWidth - (margins * 2), align: "justify" });
+
+        const paragraph1 = `Por medio de la presente, certificamos que el Sr./Sra. ${empName} con cédula de identidad ${empCedula} labora en nuestra empresa ${currentSession.company || "la empresa"} desde el ${startDateFormatted}, desempeñándose como ${position}. Actualmente, percibe un salario mensual de $${salary}.`;
+
+        const paragraph2 = `Se expide el presente certificado de acuerdo a la solicitud del interesado para los fines que crea conveniente.`;
+
+        doc.text(paragraph1, margins, 100, { maxWidth: pageWidth - (margins * 2), align: "justify" });
+        doc.text(paragraph2, margins, 130, { maxWidth: pageWidth - (margins * 2), align: "justify" });
 
         // --- Footer ---
         const footerY = 200;
