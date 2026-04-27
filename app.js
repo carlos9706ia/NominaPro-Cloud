@@ -665,7 +665,7 @@ async function sendPayrollEmail(empId, silent = false) {
         const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
         if (!jsPDFLib) throw new Error("La librería de PDF no se cargó correctamente. Por favor, refresca la página.");
 
-        const doc = new jsPDFLib();
+        const doc = new jsPDFLib({ compress: true });
         const pageWidth = doc.internal.pageSize.getWidth();
 
         // --- Encabezado ---
@@ -923,7 +923,7 @@ async function sendPayroll(empId) {
         const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
         if (!jsPDFLib) throw new Error("La librería de PDF no se cargó correctamente. Por favor, refresca la página.");
 
-        const doc = new jsPDFLib();
+        const doc = new jsPDFLib({ compress: true });
         const pageWidth = doc.internal.pageSize.getWidth();
 
         // --- Encabezado ---
@@ -1112,7 +1112,7 @@ async function generateLaborCertificate() {
         const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
         if (!jsPDFLib) throw new Error("jsPDF no cargado correctamente.");
 
-        const doc = new jsPDFLib();
+        const doc = new jsPDFLib({ compress: true });
         const pageWidth = doc.internal.pageSize.getWidth();
 
         // --- Header ---
