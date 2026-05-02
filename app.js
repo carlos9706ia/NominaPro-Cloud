@@ -746,8 +746,9 @@ async function sendPayrollEmail(empId, silent = false) {
         doc.text(`BANCO/CUENTA: ${emp.Banco || emp.bank || ""} | ${emp.TipoCuenta || emp.accountType || ""} | ${emp.Cuenta || emp.NumeroCuenta || emp.account || ""}`, 15, finalY + 20);
 
         // --- Firmas ---
-        doc.text("Firma del Empleador", 15, finalY + 30);
-        doc.text("Firma del Empleado", 15, finalY + 35);
+        doc.text("Firma del Empleado", 15, finalY + 30);
+        doc.text("______________________________", 15, finalY + 45);
+        doc.text("Firma del Empleador", 15, finalY + 55);
 
         const pdfBlob = doc.output('blob');
 
@@ -1001,8 +1002,9 @@ async function sendPayroll(empId) {
         doc.text(`FORMA DE PAGO: ${emp.MetodoPago || "TRANSFERENCIA"}`, 15, finalY + 15);
         doc.text(`BANCO/CUENTA: ${emp.Banco || emp.bank || ""} | ${emp.TipoCuenta || emp.accountType || ""} | ${emp.Cuenta || emp.NumeroCuenta || emp.account || ""}`, 15, finalY + 20);
 
-        doc.text("Firma del Empleador", 15, finalY + 30);
-        doc.text("Firma del Empleado", 15, finalY + 35);
+        doc.text("Firma del Empleado", 15, finalY + 30);
+        doc.text("______________________________", 15, finalY + 45);
+        doc.text("Firma del Empleador", 15, finalY + 55);
 
         const pdfBlob = doc.output('blob');
 
