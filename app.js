@@ -1047,12 +1047,18 @@ function fillPdfTemplate(emp, data, month) {
 
     document.getElementById('pdf-emp-name').textContent = emp.NombreCompleto || emp.names;
     document.getElementById('pdf-emp-id').textContent = emp.Title || emp.id;
-    document.getElementById('pdf-salary').textContent = data.salary.toFixed(2);
-    document.getElementById('pdf-iess').textContent = data.iess.toFixed(2);
-    document.getElementById('pdf-other-deductions').textContent = (data.extraDeductions || 0).toFixed(2);
-    document.getElementById('pdf-total-income').textContent = (data.salary + (data.extraIncome || 0)).toFixed(2);
-    document.getElementById('pdf-total-deductions').textContent = (data.iess + (data.extraDeductions || 0)).toFixed(2);
-    document.getElementById('pdf-net-pay').textContent = `$${data.net.toFixed(2)}`;
+    const bSalary = data.baseSalary || data.salary || 0;
+    const tIn = data.totalIn || data.total || bSalary;
+    const tOut = data.totalOut || (data.iess || (bSalary * 0.0945));
+    const eIn = tIn - bSalary;
+    const eOut = tOut - (data.iess || (bSalary * 0.0945));
+
+    document.getElementById('pdf-salary').textContent = bSalary.toFixed(2);
+    document.getElementById('pdf-iess').textContent = (data.iess || (bSalary * 0.0945)).toFixed(2);
+    document.getElementById('pdf-other-deductions').textContent = eOut.toFixed(2);
+    document.getElementById('pdf-total-income').textContent = tIn.toFixed(2);
+    document.getElementById('pdf-total-deductions').textContent = tOut.toFixed(2);
+    document.getElementById('pdf-net-pay').textContent = `$${(data.net || 0).toFixed(2)}`;
 
     const method = emp.FormaPago || emp.paymentMethod || 'EFECTIVO';
     document.getElementById('pdf-payment-method').textContent = method.toUpperCase();
