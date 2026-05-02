@@ -750,6 +750,15 @@ async function sendPayrollEmail(empId, silent = false) {
         doc.text("______________________________", 15, finalY + 45);
         doc.text("Firma del Empleador", 15, finalY + 55);
 
+        // --- Pie de página ---
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        const now = new Date();
+        const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        doc.text("Este documento es un comprobante legal de pago de haberes conforme a la normativa vigente.", 15, pageHeight - 10);
+        doc.text(`Generado el: ${timestamp}`, pageWidth - 15, pageHeight - 10, { align: "right" });
+
         const pdfBlob = doc.output('blob');
 
         // 2. Firmar el PDF (Con protección)
@@ -1005,6 +1014,15 @@ async function sendPayroll(empId) {
         doc.text("Firma del Empleado", 15, finalY + 30);
         doc.text("______________________________", 15, finalY + 45);
         doc.text("Firma del Empleador", 15, finalY + 55);
+
+        // --- Pie de página ---
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        const now = new Date();
+        const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        doc.text("Este documento es un comprobante legal de pago de haberes conforme a la normativa vigente.", 15, pageHeight - 10);
+        doc.text(`Generado el: ${timestamp}`, pageWidth - 15, pageHeight - 10, { align: "right" });
 
         const pdfBlob = doc.output('blob');
 
