@@ -948,6 +948,9 @@ async function sendPayroll(empId) {
         // --- Datos Empleado ---
         doc.setFontSize(11);
         doc.text("DATOS DEL EMPLEADO", 15, 45);
+        doc.setFontSize(9);
+        doc.text(`NOMBRES: ${emp.NombreCompleto || emp.names || emp.Title || ""}`, 15, 52);
+        doc.text(`CÉDULA: ${emp.Cedula || emp.id || emp.Title || ""}`, 15, 57);
         const [y2, m2] = month.split('-');
         const lastDay2 = new Date(y2, m2, 0).getDate();
         doc.text(`PERIODO: desde 01/${m2}-${y2} al ${lastDay2}/${m2}-${y2}`, 15, 62);
